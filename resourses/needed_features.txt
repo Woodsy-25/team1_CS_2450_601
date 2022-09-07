@@ -1,0 +1,36 @@
+employee info
+    name
+    address
+    office phone
+    employee id
+    pay type
+    D.O.B.
+    SS#
+    start date
+    bank info (if direct deposit)
+    permission level
+    title
+    department
+    office email
+    all other info from old project
+
+User log in page
+
+add employee
+edit employee
+search employee by last name or employee id
+    view that employee
+deactivate employee
+win 10
+report of entire Data base for general or admin with or without archived employee
+export either or any of database reports as csv
+secure records to only admin permissions
+intuitive GUI (help available either mouse over with option for on/off or help file)
+user manual
+readme.txt
+simple just download installation that runs
+generate pay report including delivery method
+garbage proof entries
+employee can edit their name, address and phone
+employee can view all personal fields
+BUG FREE

@@ -1,0 +1,83 @@
+Design of login screen method example in English
+
+Must gather correct name provided by Admin in Emp database
+Must send out message that employee not yet enrolled
+Must send out login error if incorrect
+Must appear when selecting entry login button or automatically appear
+Must verify by login name and password
+Set user permissions and adjust GUI*
+This design depends upon GUI
+
+1. Connect to tkinter
+2. Consider functools to confirm login match - may not be really necessary
+3. set up a container window (would be for inheritanace and coordination with
+	other widgets.
+4. geometry to set size after merged with program
+5. set title of overall window - may not be necessary for combined GUI
+6. get user name text and password inputs, label, and make sure get() works
+7. get user name from database
+8. if user name not in database report that the user is not yet a valid employee
+9. if user name or password incorrect, display warning
+10. validate user name password, get user permissions, and display proper window.
+
+Design of login screen method example in Pseudo Code:
+
+1. build validateLogin(username, password)
+2. printout  to com for test
+3. usernameLabel = set text entry window to collect User Name, set grid location
+4. set username to a stringVar
+5. set usernameEntry as textvariable username
+6. passwordLable = set text entry window to collect Password, set grid location, show *
+7. set password to a stringVar
+8. set password entry to to textvariable password
+9. build validateLogin method using partial (functools)
+10.Match validateLogin method with empData*
+11. determine user permissions*
+12. display correct GUI based upon permissions*.
+
+*return to these when permissions and gui's are ready
+
+Phyton/Ttk code:
+#Example tkinter login screen
+#CS2450
+#this will test the idea - needs work to include in a class but that may not have to be.
+#Instructor = Craig Sharp
+#2/4/21
+
+from tkinter import * #this is just for study example... not always a good idea to import all.
+from functools import partial #allows the use of part of a function
+
+#this is a printed validation - it needs to be compared to the data record
+
+def validateLogin(username, password):
+    print ("username entered :", username.get())
+    print ("password entered :", password.get())
+
+#main window
+tkWindow = Tk()
+tkWindow.geometry('225x85')
+tkWindow.title('Example Login from pythonexamples.org')
+
+#username and password entry labels and boxes
+
+usernameLabel = Label(tkWindow, text = "User Name").grid(row=0, column = 0)
+username = StringVar()
+usernameEntry = Entry(tkWindow, textvariable = username).grid(row = 0, column = 1)
+passwordLabel = Label(tkWindow, text = "Password").grid(row = 1, column = 0)
+password = StringVar()
+passwordEntry = Entry(tkWindow, textvariable = password, show = '*').grid(row = 1, column = 1)
+
+#function that needs to be expanded to check data record
+
+validateLogin = partial(validateLogin, username, password)
+
+#add login button
+loginButton = Button(tkWindow, text = "Login", command = validateLogin).grid(row = 4, column = 0)
+
+#informal way to end test file - use combined file mainloop ending and call function(s)
+tkWindow.mainloop()
+
+#resizable must be coordinated with overall program geometry as well as integration
+#with classes and style. Passwords assigned by others and included in empData.
+
+

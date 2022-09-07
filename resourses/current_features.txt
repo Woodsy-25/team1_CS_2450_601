@@ -1,0 +1,34 @@
+Current features
+	loads employee info from employees.csv
+		Id
+		First name
+		Last name
+		Address
+		City
+		State
+		Zip
+		Classification
+		Salary
+		Commission
+	    Hourly
+	Allows you to add an employee
+    Finds an employee by id
+    
+    loads timecards.csv
+
+    loads sales receipts.csv
+
+    Employee class
+        change to salary, hourly, or commission
+    
+    salary
+        compute the pay
+
+    hourly
+        compute the pay
+        add timecards
+
+    commission
+        compute the pay
+        add sales receipts
+
