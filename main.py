@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 
 #the payroll code
@@ -203,7 +203,7 @@ class PayrollApp(tk.Tk):
 
         self.frames = {}
 
-        for f in (StartingPage, LoginPage, AdminPage):
+        for f in (StartingPage, LoginPage, AdminPage, AddEmployeePage):
             frame = f(container, self)
             self.frames[f] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -227,11 +227,15 @@ class StartingPage(tk.Frame):
         button2 = ttk.Button(self, text="Quit", command=quit)
         button2.pack()
 
+'''
+checks the username and password against the database
+if it is correct then it will log it into its level
+'''
 def login(entry1, entry2):
         if entry1 == "admin" and entry2 == "admin":
-            return True
+            #opening admin page
+            app.show_frame(AdminPage)
         else:
-            return False
             messagebox.showerror("Error", "Invalid username or password")
 
 class LoginPage(tk.Frame):
@@ -253,9 +257,10 @@ class LoginPage(tk.Frame):
         entry2 = tk.Entry(self)
         entry2.pack()
 
-        #only allow admin to login
-        button1 = ttk.Button(self, text="Login", command=lambda: controller.show_frame(AdminPage))
+        #check if username and password are correct
+        button1 = ttk.Button(self, text="Login", command=lambda: login(entry1.get(), entry2.get()))
         button1.pack()
+        
 
         button2 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(StartingPage))
         button2.pack()
@@ -267,10 +272,67 @@ class AdminPage(tk.Frame):
         label = tk.Label(self, text="Admin Page", font=largefont)
         label.pack(pady=10, padx=10)
 
-        button1 = ttk.Button(self, text="Run Payroll", command=run_payroll)
+        #add employee
+        button1 = ttk.Button(self, text="Add Employee", command=lambda: controller.show_frame(AddEmployeePage))
         button1.pack()
 
         button2 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(LoginPage))
+        button2.pack()
+
+class AddEmployeePage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        label = tk.Label(self, text="Add Employee", font=largefont)
+        label.pack(pady=10, padx=10)
+    
+        label1 = tk.Label(self, text="First Name")
+        label1.pack()
+
+        entry1 = tk.Entry(self)
+        entry1.pack()
+
+        label2 = tk.Label(self, text="Last Name")
+        label2.pack()
+
+        entry2 = tk.Entry(self)
+        entry2.pack()
+
+        label3 = tk.Label(self, text="Address")
+        label3.pack()
+
+        entry3 = tk.Entry(self)
+        entry3.pack()
+
+        label4 = tk.Label(self, text="City")
+        label4.pack()
+
+        entry4 = tk.Entry(self)
+        entry4.pack()
+
+        label5 = tk.Label(self, text="State")
+        label5.pack()
+
+        entry5 = tk.Entry(self)
+        entry5.pack()
+
+        label6 = tk.Label(self, text="Zipcode")
+        label6.pack()
+
+        entry6 = tk.Entry(self)
+        entry6.pack()
+
+        #option menu for classification(salaried, hourly, commisioned)
+        label7 = tk.Label(self, text="Classification")
+        label7.pack()
+
+        entry7 = tk.Entry(self)
+        entry7.pack()
+
+        button1 = ttk.Button(self, text="Add Employee", command=lambda: controller.show_frame(AdminPage))
+        button1.pack()
+
+        button2 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(AdminPage))
         button2.pack()
 
 
