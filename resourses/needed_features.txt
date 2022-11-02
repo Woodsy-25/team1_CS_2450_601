@@ -1,18 +1,27 @@
 employee info
+    ID
     name
-    address
+    street
+    city
+    state
+    zip
+    phone
     office phone
-    employee id
-    pay type
-    D.O.B.
-    SS#
-    start date
-    bank info (if direct deposit)
-    permission level
-    title
+    email
     department
-    office email
-    all other info from old project
+    title
+    paytype
+    DOB
+    hire date
+    SSN
+    permission level
+    
+    payment info
+
+    account number
+    routing number
+
+
 
 User log in page
 
