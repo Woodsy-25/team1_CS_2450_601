@@ -10,7 +10,7 @@ def load_employees():
     Adds the Employee object to a global list of EMPLOYEES.
     """
 
-    with open('EMPLOYEES.csv', 'r', encoding="utf-8") as in_file:
+    with open('employees.csv', 'r', encoding="utf-8") as in_file:
         next(in_file) # skip header
 
         for line in in_file:
@@ -106,7 +106,7 @@ def run_payroll():
                                         # object to compute the pay
 
 class Employee:
-    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, pay_method, salary, commission, hourly, routing_num, account_num, office_phone, personal_phone, office_email, personal_email, dob, ssn, admin, title, dept, start, end, status, password):
+    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name
@@ -115,25 +115,20 @@ class Employee:
         self.state = state
         self.zip = zip
         self.classification = classification
-        self.pay_method = pay_method
         self.salary = salary
         self.commission = commission
         self.hourly = hourly
-        self.routing_num = routing_num
-        self.account_num = account_num
-        self.office_phone = office_phone
-        self.personal_phone = personal_phone
-        self.office_email = office_email
-        self.personal_email = personal_email
         self.dob = dob
         self.ssn = ssn
-        self.admin = admin
+        self.start_date = start_date
+        self.account = account
+        self.routing_num = routing_num
+        self.permissions = permissions
         self.title = title
         self.dept = dept
-        self.start = start
-        self.end = end
-        self.status = status
-        self.password = password
+        self.office_email = office_email
+        self.office_phone = office_phone
+
 
     def get_id(self):
         return self.emp_id
@@ -159,32 +154,27 @@ class Employee:
         return self.commission
     def get_hourly(self):
         return self.hourly
-    def get_office_phone(self):
-        return self.office_phone
-    def get_personal_phone(self):
-        return self.personal_phone
-    def get_office_email(self):
-        return self.office_email
-    def get_personal_email(self):
-        return self.personal_email
     def get_dob(self):
         return self.dob
     def get_ssn(self):
         return self.ssn
-    def is_admin(self):
-        return self.admin
+    def get_start_date(self):
+        return self.start_date
+    def get_account(self):
+        return self.account
+    def get_routing_num(self):
+        return self.routing_num
+    def get_permissions(self):
+        return self.permissions
     def get_title(self):
         return self.title
     def get_dept(self):
         return self.dept
-    def get_start(self):
-        return self.start
-    def get_end(self):
-        return self.end
-    def get_status(self):
-        return self.status
-    def get_password(self):
-        return self.password
+    def get_office_email(self):
+        return self.office_email
+    def get_office_phone(self):
+        return self.office_phone
+
 
 
     def set_id(self, emp_id):
@@ -201,6 +191,37 @@ class Employee:
         self.state = state
     def set_zip(self, zip):
         self.zip = zip
+    def set_class(self, classification):
+        self.classification = classification
+    def set_classification(self, classification):
+        self.classification = classification
+    def set_salary(self, salary):
+        self.salary = salary
+    def set_commission(self, commission):
+        self.commission = commission
+    def set_hourly(self, hourly):
+        self.hourly = hourly
+    def set_dob(self, dob):
+        self.dob = dob
+    def set_ssn(self, ssn):
+        self.ssn = ssn
+    def set_start_date(self, start_date):
+        self.start_date = start_date
+    def set_account(self, account):
+        self.account = account
+    def set_routing_num(self, routing_num):
+        self.routing_num = routing_num
+    def set_permissions(self, permissions):
+        self.permissions = permissions
+    def set_title(self, title):
+        self.title = title
+    def set_dept(self, dept):
+        self.dept = dept
+    def set_office_email(self, office_email):
+        self.office_email = office_email
+    def set_office_phone(self, office_phone):
+        self.office_phone = office_phone
+
 
 
     def make_salaried(self, salary):
