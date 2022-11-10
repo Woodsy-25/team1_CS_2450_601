@@ -106,15 +106,102 @@ def run_payroll():
                                         # object to compute the pay
 
 class Employee:
-    def __init__(self, emp_id, first_name, last_name, address, city, state, zipcode, classification):
+    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, pay_method, salary, commission, hourly, routing_num, account_num, office_phone, personal_phone, office_email, personal_email, dob, ssn, admin, title, dept, start, end, status, password):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name
-        self.address = address
+        self.street = street
         self.city = city
         self.state = state
-        self.zipcode = zipcode
+        self.zip = zip
         self.classification = classification
+        self.pay_method = pay_method
+        self.salary = salary
+        self.commission = commission
+        self.hourly = hourly
+        self.routing_num = routing_num
+        self.account_num = account_num
+        self.office_phone = office_phone
+        self.personal_phone = personal_phone
+        self.office_email = office_email
+        self.personal_email = personal_email
+        self.dob = dob
+        self.ssn = ssn
+        self.admin = admin
+        self.title = title
+        self.dept = dept
+        self.start = start
+        self.end = end
+        self.status = status
+        self.password = password
+
+    def get_id(self):
+        return self.emp_id
+    def get_first_name(self):
+        return self.first_name
+    def get_last_name(self):
+        return self.last_name
+    def get_street(self):
+        return self.street
+    def get_city(self):
+        return self.city
+    def get_state(self):
+        return self.state
+    def get_zip(self):
+        return self.zip
+    def get_class(self):
+        return string(self.classification)
+    def get_classification(self):
+        return self.classification
+    def get_salary(self):
+        return self.salary
+    def get_commission(self):
+        return self.commission
+    def get_hourly(self):
+        return self.hourly
+    def get_office_phone(self):
+        return self.office_phone
+    def get_personal_phone(self):
+        return self.personal_phone
+    def get_office_email(self):
+        return self.office_email
+    def get_personal_email(self):
+        return self.personal_email
+    def get_dob(self):
+        return self.dob
+    def get_ssn(self):
+        return self.ssn
+    def is_admin(self):
+        return self.admin
+    def get_title(self):
+        return self.title
+    def get_dept(self):
+        return self.dept
+    def get_start(self):
+        return self.start
+    def get_end(self):
+        return self.end
+    def get_status(self):
+        return self.status
+    def get_password(self):
+        return self.password
+
+
+    def set_id(self, emp_id):
+        self.emp_id = emp_id
+    def set_first_name(self, first_name):
+        self.first_name = first_name
+    def set_last_name(self, last_name):
+        self.last_name = last_name
+    def set_street(self, street):
+        self.street = street
+    def set_city(self, city):
+        self.city = city
+    def set_state(self, state):
+        self.state = state
+    def set_zip(self, zip):
+        self.zip = zip
+
 
     def make_salaried(self, salary):
         """Changes employee classification to 'salaried' with the given salary."""
