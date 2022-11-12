@@ -1,7 +1,9 @@
-import os, os.path, shutil
+import os, os.path, shutil, uuid
 
 EMPLOYEES = []
 PAY_LOGFILE = 'paylog.txt'
+
+EMPLOYEES_FILE = 'employees_with_info.csv'
 
 def load_employees():
     """
@@ -9,15 +11,16 @@ def load_employees():
     Creates and assigns the appropriate classification instance for the employee as an attribute.
     Adds the Employee object to a global list of EMPLOYEES.
     """
+    print('Loading Employees in payroll.py')
 
-    with open('employees.csv', 'r', encoding="utf-8") as in_file:
+    with open(EMPLOYEES_FILE, 'r', encoding="utf-8") as in_file:
         next(in_file) # skip header
 
         for line in in_file:
             line = line.strip().split(',')
 
             # set emp_id, first_name, last_name, address, city, state, zipcode
-            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], None)
+            emp = Employee(*line)
 
             class_id = int(line[7]) # salary = 1, commisioned = 2, hourly = 3
             salary = float(line[8])
@@ -33,28 +36,25 @@ def load_employees():
                 emp.make_hourly(hourly_rate)
 
             EMPLOYEES.append(emp)
+        # print(EMPLOYEES)
 
-def add_employee(emp_id, first_name, last_name, address, city, state, zipcode):
+def add_employee(first_name, last_name, street, city, state, zip, classification, amount, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone):
     """
     Adds a new employee to the EMPLOYEES list.
     """
-    emp = Employee(emp_id, first_name, last_name, address, city, state, zipcode, None)
+
+    salary = commission = hourly = 0
+    if classification == 'Salary':
+        salary = amount
+    elif classification == 'Commission':
+        commission = amount
+    elif classification == 'Hourly':
+        hourly = amount
+
+    emp_id = uuid.uuid4()
+
+    emp = Employee(emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone)
     EMPLOYEES.append(emp)
-
-def user_add_employee():
-    """
-    Prompts the user for employee information and adds the employee to the EMPLOYEES list.
-    """
-    emp_id = input('Enter employee ID: ')
-    first_name = input('Enter first name: ')
-    last_name = input('Enter last name: ')
-    address = input('Enter address: ')
-    city = input('Enter city: ')
-    state = input('Enter state: ')
-    zipcode = input('Enter zipcode: ')
-    add_employee(emp_id, first_name, last_name, address, city, state, zipcode)
-
-user_add_employee
 
 def find_employee_by_id(emp_id):
     """Returns the Employee object of a given ID."""
@@ -129,6 +129,8 @@ class Employee:
         self.office_email = office_email
         self.office_phone = office_phone
 
+    def get_personal_info(self):
+        return [self.first_name, self.last_name, self.street, self.city, self.state, self.zip, self.title]
 
     def get_id(self):
         return self.emp_id
@@ -241,7 +243,7 @@ class Employee:
         """Appends employee payment information to paylog.txt"""
         pay = self.classification.compute_pay()
         message = f'Mailing {pay:0.2f} to {self.first_name} {self.last_name} at '\
-        f'{self.address} {self.city} {self.state} {self.zipcode}\n'
+        f'{self.street} {self.city} {self.state} {self.zip}\n'
 
         with open('paylog.txt', 'a', encoding="utf-8") as out_file:
             out_file.write(message)
@@ -294,40 +296,40 @@ class Hourly(Classification):
         """Adds a timecard to a private list."""
         self._timecards.append(timecard)
 
-def main():
-    load_employees()
-    process_timecards()
-    process_receipts()
-    run_payroll()
+# def main():
+#     load_employees()
+#     process_timecards()
+#     process_receipts()
+#     run_payroll()
 
-    # Save copy of payroll file; delete old file
-    shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
-    if os.path.exists(PAY_LOGFILE):
-        os.remove(PAY_LOGFILE)
+#     # Save copy of payroll file; delete old file
+#     shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
+#     if os.path.exists(PAY_LOGFILE):
+#         os.remove(PAY_LOGFILE)
 
-    # Change Issie Scholard to Salaried by changing the Employee object:
-    emp = find_employee_by_id('51-4678119')
-    emp.make_salaried(134386.51)
-    emp.issue_payment()
+#     # Change Issie Scholard to Salaried by changing the Employee object:
+#     emp = find_employee_by_id('51-4678119')
+#     emp.make_salaried(134386.51)
+#     emp.issue_payment()
 
-    # Change Reynard,Lorenzin to Commissioned; add some receipts
-    emp = find_employee_by_id('11-0469486')
-    emp.make_commissioned(50005.50, 27)
-    clas = emp.classification
-    clas.add_receipt(1109.73)
-    clas.add_receipt(746.10)
-    emp.issue_payment()
+#     # Change Reynard,Lorenzin to Commissioned; add some receipts
+#     emp = find_employee_by_id('11-0469486')
+#     emp.make_commissioned(50005.50, 27)
+#     clas = emp.classification
+#     clas.add_receipt(1109.73)
+#     clas.add_receipt(746.10)
+#     emp.issue_payment()
 
-    # Change Jed Netti to Hourly; add some hour entries
-    emp = find_employee_by_id('68-9609244')
-    emp.make_hourly(47)
-    clas = emp.classification
-    clas.add_timecard(8.0)
-    clas.add_timecard(8.0)
-    clas.add_timecard(8.0)
-    clas.add_timecard(8.0)
-    clas.add_timecard(8.0)
-    emp.issue_payment()
+#     # Change Jed Netti to Hourly; add some hour entries
+#     emp = find_employee_by_id('68-9609244')
+#     emp.make_hourly(47)
+#     clas = emp.classification
+#     clas.add_timecard(8.0)
+#     clas.add_timecard(8.0)
+#     clas.add_timecard(8.0)
+#     clas.add_timecard(8.0)
+#     clas.add_timecard(8.0)
+#     emp.issue_payment()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
