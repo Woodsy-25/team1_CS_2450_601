@@ -147,7 +147,7 @@ class Employee:
     def get_zip(self):
         return self.zip
     def get_class(self):
-        return string(self.classification)
+        return str(self.classification)
     def get_classification(self):
         return self.classification
     def get_salary(self):
@@ -233,7 +233,7 @@ class Employee:
     def make_commissioned(self, salary, commision_rate):
         """Changes employee classification to 'commissioned'
         with the given salary and commission rate."""
-        self.classification = Commisioned(salary, commision_rate)
+        self.classification = Commissioned(salary, commision_rate)
 
     def make_hourly(self, hourly_rate):
         """Changes employee classification to 'hourly' with the given hourly rate."""
@@ -256,17 +256,23 @@ class Salaried(Classification):
     def __init__(self, salary):
         self.salary = salary
 
+    def __str__(self):
+        return 'Salary'
+
     def compute_pay(self): # override method
         """Returns the employee's salaried pay."""
         pay = self.salary / 24 # 24 pay periods per year
 
         return round(pay, 2)
 
-class Commisioned(Salaried):
+class Commissioned(Salaried):
     def __init__(self, salary, commission_rate):
         super().__init__(salary)
         self.commission_rate = commission_rate / 100
         self._receipts = []
+
+    def __str__(self):
+        return 'Commission'
 
     def compute_pay(self): # override method
         """Returns the employee's salaried pay plus commission."""
@@ -284,6 +290,9 @@ class Hourly(Classification):
     def __init__(self, hourly_rate):
         self.hourly_rate = hourly_rate
         self._timecards = []
+    
+    def __str__(self):
+        return 'Hourly'
 
     def compute_pay(self): # override method
         """Returns the employee's hourly pay."""
