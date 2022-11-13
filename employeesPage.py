@@ -15,7 +15,7 @@ def main_screen():
     root.geometry('1000x700')
     root.pack_propagate(False)
     root.resizable(0, 0)
-    filename = "employee.csv"
+    filename = "employees_with_info.csv"
     col_l = ["First Name", "Last Name", "Address", "City", "State"]
 
     style_tree = ttk.Style()

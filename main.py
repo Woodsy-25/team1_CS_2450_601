@@ -6,7 +6,7 @@ This is the main program that curretly holds both the code from the employee pro
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk, messagebox, messagebox
-from emp import *
+from payroll import *
 import pandas as pd
 from operator import itemgetter
 import payroll
@@ -356,7 +356,7 @@ class AdminPage(Page):
     def changeTab(self, *args):
         tab = self.tabControl.index(self.tabControl.select())
         if tab == 0:
-            self.exportBtn.pack_forget()
+            #self.exportBtn.pack_forget()
             self.cancelBtn.pack(**self.actionPack)
             self.saveBtn.pack(**self.actionPack)
         if tab == 1:
@@ -371,53 +371,53 @@ class AdminPage(Page):
 
             messagebox.showinfo(message='Employee Added Successfully')
 
-    def editEmployee(self, emp):
+    def editEmployee(self, payroll):
         self.action = 'EDIT'
         self.tabControl.tab(self.manageEmpTab, text='Edit Employee')
 
-        setEntry(self.fName, emp.get_first_name())
-        setEntry(self.lName, emp.get_last_name())
-        setEntry(self.street, emp.get_street())
-        setEntry(self.city, emp.get_city())
-        setEntry(self.state, emp.get_state())
-        setEntry(self.zip, emp.get_zip())
-        setEntry(self.title, emp.get_title())
-        setEntry(self.email, emp.get_office_email())
-        setEntry(self.phone, emp.get_office_phone())
-        setEntry(self.dob, emp.get_dob())
-        setEntry(self.ssn, emp.get_ssn())
+        setEntry(self.fName, payroll.get_first_name())
+        setEntry(self.lName, payroll.get_last_name())
+        setEntry(self.street, payroll.get_street())
+        setEntry(self.city, payroll.get_city())
+        setEntry(self.state, payroll.get_state())
+        setEntry(self.zip, payroll.get_zip())
+        setEntry(self.title, payroll.get_title())
+        setEntry(self.email, payroll.get_office_email())
+        setEntry(self.phone, payroll.get_office_phone())
+        setEntry(self.dob, payroll.get_dob())
+        setEntry(self.ssn, payroll.get_ssn())
 
         # Set classification dropdown
-        classification = emp.get_class()
+        classification = payroll.get_class()
         amount = ""
         if classification == 'Salary':
             classification = 0
-            amount = emp.get_salary()
+            amount = payroll.get_salary()
         elif classification == 'Commission':
             classification = 1
-            amount = emp.get_commission()
+            amount = payroll.get_commission()
         elif classification == 'Hourly':
             classification = 2
-            amount = emp.get_hourly()
+            amount = payroll.get_hourly()
         self.classSelect.current(classification)
         setEntry(self.amount, amount)
 
         # Set department dropdown
-        dept = emp.get_dept()
+        dept = payroll.get_dept()
         for i in range(0, len(self.deptSelect['values'])):
             if self.deptSelect['values'][i] == dept:
                 self.deptSelect.current(i)
 
         # Set permissions dropdown
-        perms = emp.get_permissions()
+        perms = payroll.get_permissions()
         if perms == '1':
             self.permSelect.current(1)
         elif perms == '2':
             self.permSelect.current(0)
 
-        setEntry(self.startDate, emp.get_start_date())
-        setEntry(self.account, emp.get_account())
-        setEntry(self.routing, emp.get_routing_num())
+        setEntry(self.startDate, payroll.get_start_date())
+        setEntry(self.account, payroll.get_account())
+        setEntry(self.routing, payroll.get_routing_num())
 
         self.tabControl.select(self.manageEmpTab) 
 
@@ -575,14 +575,14 @@ class EmployeePage(Page):
             self.saveBtn.pack_forget()
 
     def loadPersonalInfo(self, *args):
-        emp = self.app.currentUser
-        setEntry(self.fName, emp.get_first_name())
-        setEntry(self.lName, emp.get_last_name())
-        setEntry(self.street, emp.get_street())
-        setEntry(self.city, emp.get_city())
-        setEntry(self.state, emp.get_state())
-        setEntry(self.zip, emp.get_zip())
-        setEntry(self.title, emp.get_title())
+        payroll = self.app.currentUser
+        setEntry(self.fName, payroll.get_first_name())
+        setEntry(self.lName, payroll.get_last_name())
+        setEntry(self.street, payroll.get_street())
+        setEntry(self.city, payroll.get_city())
+        setEntry(self.state, payroll.get_state())
+        setEntry(self.zip, payroll.get_zip())
+        setEntry(self.title, payroll.get_title())
         for item in self.personalInfo:
             item.config(state=DISABLED) # or 'readonly'?
 
@@ -607,14 +607,14 @@ class EmployeePage(Page):
                 self.saveBtn.pack_forget()
                 self.editBtn.pack(**self.actionPack)
             
-            emp = self.app.currentUser
-            emp.set_first_name(self.fName.get())
-            emp.set_last_name(self.lName.get())
-            emp.set_street(self.street.get())
-            emp.set_city(self.city.get())
-            emp.set_state(self.state.get())
-            emp.set_zip(self.zip.get())
-            emp.set_title(self.title.get())
+            payroll = self.app.currentUser
+            payroll.set_first_name(self.fName.get())
+            payroll.set_last_name(self.lName.get())
+            payroll.set_street(self.street.get())
+            payroll.set_city(self.city.get())
+            payroll.set_state(self.state.get())
+            payroll.set_zip(self.zip.get())
+            payroll.set_title(self.title.get())
 
     def validateForm(self):
         return True
@@ -770,8 +770,8 @@ class searchFrame(ttk.Frame):
             editBtn = ttk.Button(self.empWindow, text="Edit", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.editEmployee(selectedEmp))
             editBtn.pack(pady = 10, padx=10)
     
-    def editEmployee(self, emp):
-        self.parentPage.editEmployee(emp)
+    def editEmployee(self, payroll):
+        self.parentPage.editEmployee(payroll)
         self.empWindow.destroy()
 
 def setEntry(entry, text):
@@ -804,28 +804,28 @@ def main():
     #     os.remove(PAY_LOGFILE)
 
     # # Change Issie Scholard to Salaried by changing the Employee object:
-    # emp = find_employee_by_id('51-4678119')
-    # emp.make_salaried(134386.51)
-    # emp.issue_payment()
+    # payroll = find_employee_by_id('51-4678119')
+    # payroll.make_salaried(134386.51)
+    # payroll.issue_payment()
 
     # # Change Reynard,Lorenzin to Commissioned; add some receipts
-    # emp = find_employee_by_id('11-0469486')
-    # emp.make_commissioned(50005.50, 27)
-    # clas = emp.classification
+    # payroll = find_employee_by_id('11-0469486')
+    # payroll.make_commissioned(50005.50, 27)
+    # clas = payroll.classification
     # clas.add_receipt(1109.73)
     # clas.add_receipt(746.10)
-    # emp.issue_payment()
+    # payroll.issue_payment()
 
     # # Change Jed Netti to Hourly; add some hour entries
-    # emp = find_employee_by_id('68-9609244')
-    # emp.make_hourly(47)
-    # clas = emp.classification
+    # payroll = find_employee_by_id('68-9609244')
+    # payroll.make_hourly(47)
+    # clas = payroll.classification
     # clas.add_timecard(8.0)
     # clas.add_timecard(8.0)
     # clas.add_timecard(8.0)
     # clas.add_timecard(8.0)
     # clas.add_timecard(8.0)
-    # emp.issue_payment()
+    # payroll.issue_payment()
 
 if __name__ == '__main__':
     main()
