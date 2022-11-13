@@ -10,14 +10,14 @@ def load_employees():
     Adds the Employee object to a global list of EMPLOYEES.
     """
 
-    with open('employees.csv', 'r', encoding="utf-8") as in_file:
+    with open('employees_with_info.csv', 'r', encoding="utf-8") as in_file:
         next(in_file) # skip header
 
         for line in in_file:
             line = line.strip().split(',')
 
-            # set emp_id, first_name, last_name, address, city, state, zipcode
-            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], None)
+            # set emp_id, first_name, last_name, address, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
+            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20])
 
             class_id = int(line[7]) # salary = 1, commisioned = 2, hourly = 3
             salary = float(line[8])
@@ -34,13 +34,15 @@ def load_employees():
 
             EMPLOYEES.append(emp)
 
-def add_employee(emp_id, first_name, last_name, address, city, state, zipcode):
+
+def add_employee(emp_id, first_name, last_name, address, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
     """
     Adds a new employee to the EMPLOYEES list.
     """
-    emp = Employee(emp_id, first_name, last_name, address, city, state, zipcode, None)
+    emp = Employee(emp_id, first_name, last_name, address, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
     EMPLOYEES.append(emp)
 
+'''
 def user_add_employee():
     """
     Prompts the user for employee information and adds the employee to the EMPLOYEES list.
@@ -53,14 +55,14 @@ def user_add_employee():
     state = input('Enter state: ')
     zipcode = input('Enter zipcode: ')
     add_employee(emp_id, first_name, last_name, address, city, state, zipcode)
-
-user_add_employee
+'''
 
 def find_employee_by_id(emp_id):
     """Returns the Employee object of a given ID."""
     for emp in EMPLOYEES:
         if emp.emp_id == emp_id:
             return emp
+
 
 def process_timecards():
     """
@@ -106,11 +108,11 @@ def run_payroll():
                                         # object to compute the pay
 
 class Employee:
-    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone):
+    def __init__(self, emp_id, first_name, last_name, address, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name
-        self.street = street
+        self.address = address
         self.city = city
         self.state = state
         self.zip = zip
@@ -136,8 +138,8 @@ class Employee:
         return self.first_name
     def get_last_name(self):
         return self.last_name
-    def get_street(self):
-        return self.street
+    def get_address(self):
+        return self.address
     def get_city(self):
         return self.city
     def get_state(self):
@@ -183,8 +185,8 @@ class Employee:
         self.first_name = first_name
     def set_last_name(self, last_name):
         self.last_name = last_name
-    def set_street(self, street):
-        self.street = street
+    def set_address(self, address):
+        self.address = address
     def set_city(self, city):
         self.city = city
     def set_state(self, state):
@@ -241,7 +243,7 @@ class Employee:
         """Appends employee payment information to paylog.txt"""
         pay = self.classification.compute_pay()
         message = f'Mailing {pay:0.2f} to {self.first_name} {self.last_name} at '\
-        f'{self.address} {self.city} {self.state} {self.zipcode}\n'
+        f'{self.address} {self.city} {self.state} {self.zip}\n'
 
         with open('paylog.txt', 'a', encoding="utf-8") as out_file:
             out_file.write(message)
@@ -304,7 +306,7 @@ def main():
     shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
     if os.path.exists(PAY_LOGFILE):
         os.remove(PAY_LOGFILE)
-
+'''
     # Change Issie Scholard to Salaried by changing the Employee object:
     emp = find_employee_by_id('51-4678119')
     emp.make_salaried(134386.51)
@@ -328,6 +330,7 @@ def main():
     clas.add_timecard(8.0)
     clas.add_timecard(8.0)
     emp.issue_payment()
+'''
 
 if __name__ == '__main__':
     main()
