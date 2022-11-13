@@ -10,7 +10,8 @@ from emp import *
 import pandas as pd
 from operator import itemgetter
 import payroll
-
+import tkinter as tk
+from idlelib.tooltip import Hovertip
 import sv_ttk
 import os
 
@@ -34,16 +35,13 @@ class PayrollApp(tk.Tk):
         self.currentUser = None
         self.frames = {}
 
-        # Theming
+        # Theming 
         self.color1 = "#fafafa"
         self.color2 = "#e7e7e7"
         self.color3 = "#5f5f5f"
 
-        # for f in (StartingPage, AdminPage, EmployeePage, LoginPage):
-        #     frame = f(container, self)
-        #     self.frames[f] = frame
-        self.init_frame(StartingPage)
-        self.init_frame(LoginPage)
+        for page in (StartingPage, LoginPage, HelpPage):
+            self.init_frame(page)   
 
         self.show_frame(StartingPage)
 
@@ -95,26 +93,27 @@ class Page(ttk.Frame):
         self.buttonPack = {'pady' : 5}
         self.actionPack = {'side' : "left", 'pady' : 10, 'padx' : (10, 0)}
 
+
     def basicEntries(self, parent):
-        fNameLbl = ttk.Label(parent, text="First Name")
+        self.fNameLbl = ttk.Label(parent, text="First Name")
         self.fName = ttk.Entry(parent, width=30)
 
-        lNameLbl = ttk.Label(parent, text="Last Name")
+        self.lNameLbl = ttk.Label(parent, text="Last Name")
         self.lName = ttk.Entry(parent, width=30)
 
-        streetLbl = ttk.Label(parent, text="Street")
+        self.streetLbl = ttk.Label(parent, text="Street")
         self.street = ttk.Entry(parent, width=30)
 
-        cityLbl = ttk.Label(parent, text="City")
+        self.cityLbl = ttk.Label(parent, text="City")
         self.city = ttk.Entry(parent, width=30)
 
-        stateLbl = ttk.Label(parent, text="State")
+        self.stateLbl = ttk.Label(parent, text="State")
         self.state = ttk.Entry(parent, width=30)
 
-        zipLbl = ttk.Label(parent, text="Zip Code")
+        self.zipLbl = ttk.Label(parent, text="Zip Code")
         self.zip = ttk.Entry(parent)
 
-        titleLbl = ttk.Label(parent, text="Title")
+        self.titleLbl = ttk.Label(parent, text="Title")
         self.title = ttk.Entry(parent)
 
         
@@ -140,14 +139,18 @@ class Page(ttk.Frame):
             button.pack(**self.buttonPack)
             button.config(width=BTN_WIDTH)
 
+    def logout(self, *args):
+        confirm = messagebox.askyesno('Confirm', 'Are you sure you want to log out?')
+        if confirm:
+            self.app.show_frame(StartingPage)
+
 
 class StartingPage(Page):
     def __init__(self, parent, controller):
         Page.__init__(self, parent, controller)
 
         self.pageTitle = ttk.Label(self, text="Welcome to the Payroll System", font=LARGE_FONT)
-        #make it top center
-        # self.pageTitle.pack(pady=10, padx=10)
+
         self.loginBtn = ttk.Button(self, text="Login", command=lambda: self.showLogin())
 
         self.quitBtn = ttk.Button(self, text="Quit", command=quit)
@@ -163,6 +166,21 @@ class StartingPage(Page):
 
     def showLogin(self, *args):
         self.app.show_frame(LoginPage)
+
+
+class HelpPage(Page):
+    def __init__(self, parent, controller):
+        Page.__init__(self, parent, controller)
+        self.parentPage
+        self.pageTitle = ttk.Label(self, text="Help Page", font=LARGE_FONT)
+
+        self.help = ttk.Label(self, text="(Helpful information will be displayed here)", font=MEDIUM_FONT)
+        self.entries = {self.help: None}
+
+        self.backBtn = ttk.Button(self, text="Back", command=lambda: self.goBack())
+
+        self.bottomButtons = [self.backBtn]
+
 
 
 '''
@@ -238,8 +256,13 @@ class AdminPage(Page):
         self.entryPack = {'pady' : (0,5), 'padx' : 20, 'fill' : X}
 
         #put logout button on the top right
-        self.logoutBtn = ttk.Button(self, text="Logout", width=BTN_WIDTH, command=lambda: controller.show_frame(StartingPage))
+        self.logoutBtn = ttk.Button(self, text="Logout", width=BTN_WIDTH, command=lambda: self.logout())
         self.logoutBtn.pack(side="right", padx=10, pady=10)
+
+        self.helpBtn = ttk.Button(self, text="?", width=2, command=lambda: controller.show_frame(HelpPage))
+        self.helpBtn.pack(side="right", pady=10)
+        helpBtnTip = Hovertip(self.helpBtn,'Help')
+
 
 
         '''
@@ -249,6 +272,8 @@ class AdminPage(Page):
         self.addEntries()
         self.saveBtn = ttk.Button(self, text="Save", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.saveEmployee())
         self.cancelBtn = ttk.Button(self, text="Cancel", width=BTN_WIDTH, command=lambda: self.cancelEdit())
+
+        saveBtnTip = Hovertip(self.saveBtn,'Add Employee')
 
         '''
         -----------------SEARCH EMPLOYEES-----------------
@@ -266,91 +291,91 @@ class AdminPage(Page):
         self.column2.pack(pady=10, side="left", expand=1, fill="both")
 
     def addEntries(self):
-        fNameLbl = ttk.Label(self.column1, text="First Name")
+        self.fNameLbl = ttk.Label(self.column1, text="First Name")
         self.fName = ttk.Entry(self.column1)
 
-        lNameLbl = ttk.Label(self.column1, text="Last Name")
+        self.lNameLbl = ttk.Label(self.column1, text="Last Name")
         self.lName = ttk.Entry(self.column1)
 
-        streetLbl = ttk.Label(self.column1, text="Street")
+        self.streetLbl = ttk.Label(self.column1, text="Street")
         self.street = ttk.Entry(self.column1)
 
-        cityLbl = ttk.Label(self.column1, text="City")
+        self.cityLbl = ttk.Label(self.column1, text="City")
         self.city = ttk.Entry(self.column1)
 
-        stateLbl = ttk.Label(self.column1, text="State")
+        self.stateLbl = ttk.Label(self.column1, text="State")
         self.state = ttk.Entry(self.column1)
 
-        zipLbl = ttk.Label(self.column1, text="Zip Code")
+        self.zipLbl = ttk.Label(self.column1, text="Zip Code")
         self.zip = ttk.Entry(self.column1)
 
-        titleLbl = ttk.Label(self.column2, text="Title")
+        self.titleLbl = ttk.Label(self.column2, text="Title")
         self.title = ttk.Entry(self.column2)
 
-        dobLbl = ttk.Label(self.column1, text="Date of Birth")
+        self.dobLbl = ttk.Label(self.column1, text="Date of Birth")
         self.dob = ttk.Entry(self.column1)
 
-        amountLbl = ttk.Label(self.column2, text="Amount")
+        self.amountLbl = ttk.Label(self.column2, text="Amount")
         self.amount = ttk.Entry(self.column2)
 
-        ssnLbl = ttk.Label(self.column2, text="SSN")
+        self.ssnLbl = ttk.Label(self.column2, text="SSN")
         self.ssn = ttk.Entry(self.column2)
 
-        startDateLbl = ttk.Label(self.column2, text="Start Date")
+        self.startDateLbl = ttk.Label(self.column2, text="Start Date")
         self.startDate = ttk.Entry(self.column2)
 
-        accountLbl = ttk.Label(self.column2, text="Account Number")
+        self.accountLbl = ttk.Label(self.column2, text="Account Number")
         self.account = ttk.Entry(self.column2)
 
-        routingLbl = ttk.Label(self.column2, text="Routing Number")
+        self.routingLbl = ttk.Label(self.column2, text="Routing Number")
         self.routing = ttk.Entry(self.column2)
 
-        emailLbl = ttk.Label(self.column1, text="Office Email")
+        self.emailLbl = ttk.Label(self.column1, text="Office Email")
         self.email = ttk.Entry(self.column1)
 
-        phoneLbl = ttk.Label(self.column1, text="Office Phone")
+        self.phoneLbl = ttk.Label(self.column1, text="Office Phone")
         self.phone = ttk.Entry(self.column1)
 
         # Classification Dropdown
-        classificationLbl = ttk.Label(self.column2, text="Classification")
+        self.classificationLbl = ttk.Label(self.column2, text="Classification")
         self.classification = StringVar()
         self.classSelect = ttk.Combobox(self.column2, textvariable=self.classification)
         self.classSelect['values'] = ['Salary', 'Commission', 'Hourly']
         self.classSelect.state(['readonly'])
 
         # Department Dropdown
-        deptLbl = ttk.Label(self.column2, text="Department")
+        self.deptLbl = ttk.Label(self.column2, text="Department")
         self.dept = StringVar()
         self.deptSelect = ttk.Combobox(self.column2, textvariable=self.dept)
         self.deptSelect['values'] = ['Engineering', 'Finance', 'HR', 'IT',  'Legal', 'Marketing', 'Operations',  'Sales']
         self.deptSelect.state(['readonly'])
 
         # Permissions Dropdown
-        permsLbl = ttk.Label(self.column2, text="Permissions")
+        self.permsLbl = ttk.Label(self.column2, text="Permissions")
         self.perms = StringVar()
         self.permSelect = ttk.Combobox(self.column2, textvariable=self.perms)
         self.permSelect['values'] = ['Admin', 'Employee']
         self.permSelect.state(['readonly'])
 
         self.entries = {
-            fNameLbl: self.fName,
-            lNameLbl: self.lName,
-            streetLbl: self.street,
-            cityLbl: self.city,
-            stateLbl: self.state,
-            zipLbl: self.zip,
-            dobLbl: self.dob,
-            emailLbl: self.email,
-            phoneLbl: self.phone,
-            titleLbl: self.title,
-            ssnLbl: self.ssn,
-            classificationLbl: self.classSelect,
-            amountLbl: self.amount,
-            startDateLbl: self.startDate,
-            accountLbl: self.account,
-            routingLbl: self.routing,
-            permsLbl: self.permSelect,
-            deptLbl: self.deptSelect
+            self.fNameLbl: self.fName,
+            self.lNameLbl: self.lName,
+            self.streetLbl: self.street,
+            self.cityLbl: self.city,
+            self.stateLbl: self.state,
+            self.zipLbl: self.zip,
+            self.dobLbl: self.dob,
+            self.emailLbl: self.email,
+            self.phoneLbl: self.phone,
+            self.titleLbl: self.title,
+            self.ssnLbl: self.ssn,
+            self.classificationLbl: self.classSelect,
+            self.amountLbl: self.amount,
+            self.startDateLbl: self.startDate,
+            self.accountLbl: self.account,
+            self.routingLbl: self.routing,
+            self.permsLbl: self.permSelect,
+            self.deptLbl: self.deptSelect
         }
 
     def changeTab(self, *args):
@@ -374,7 +399,7 @@ class AdminPage(Page):
     def editEmployee(self, emp):
         self.action = 'EDIT'
         self.tabControl.tab(self.manageEmpTab, text='Edit Employee')
-
+        saveBtnTip = Hovertip(self.saveBtn,'Update Employee')
         setEntry(self.fName, emp.get_first_name())
         setEntry(self.lName, emp.get_last_name())
         setEntry(self.street, emp.get_street())
@@ -427,6 +452,8 @@ class AdminPage(Page):
             #TODO: Update employee
             messagebox.showinfo(message='Employee Updated Successfully')
             self.tabControl.tab(self.manageEmpTab, text='Add Employee')
+            saveBtnTip = Hovertip(self.saveBtn,'Add Employee')
+
             self.tabControl.select(self.searchEmpTab)
             for entry in self.entries.values():
                 entry.delete(0,END)
@@ -489,11 +516,19 @@ class EmployeePage(Page):
         payStubColumn.pack(padx=10, pady=10, ipady=30, side="left", expand=1, fill="both")
         self.editBtn = ttk.Button(self, text="Edit", width=BTN_WIDTH, command=lambda: self.editPersonalInfo())
         self.saveBtn = ttk.Button(self, text="Save", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.savePersonalInfo())
+
+        editBtnTip = Hovertip(self.editBtn,'Edit Personal Information')
+        saveBtnTip = Hovertip(self.saveBtn,'Save Personal Information')
+
         self.cancelBtn = ttk.Button(self, text="Cancel", width=BTN_WIDTH, command=lambda: self.loadPersonalInfo())
 
         #put logout button on the bottom right
-        self.logoutBtn = ttk.Button(self, text="Logout", width=BTN_WIDTH, command=lambda: controller.show_frame(StartingPage))
+        self.logoutBtn = ttk.Button(self, text="Logout", width=BTN_WIDTH, command=lambda: self.logout())
         self.logoutBtn.pack(side="right", padx=10, pady=10)
+
+        self.helpBtn = ttk.Button(self, text="?", width=2, command=lambda: controller.show_frame(HelpPage))
+        self.helpBtn.pack(side="right", pady=10)
+        helpBtnTip = Hovertip(self.helpBtn,'Help')
 
         # button1 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(AdminPage))
         # button1.pack()
@@ -504,34 +539,34 @@ class EmployeePage(Page):
         #inner padding not working so use blank label
         blankInfo = ttk.Label(infoColumn, text="")
         
-        fNameLbl = ttk.Label(infoColumn, text="First Name")
+        self.fNameLbl = ttk.Label(infoColumn, text="First Name")
         self.fName = ttk.Entry(infoColumn, width=30)
 
-        lNameLbl = ttk.Label(infoColumn, text="Last Name")
+        self.lNameLbl = ttk.Label(infoColumn, text="Last Name")
         self.lName = ttk.Entry(infoColumn, width=30)
 
-        streetLbl = ttk.Label(infoColumn, text="Street")
+        self.streetLbl = ttk.Label(infoColumn, text="Street")
         self.street = ttk.Entry(infoColumn, width=30)
 
-        cityLbl = ttk.Label(infoColumn, text="City")
+        self.cityLbl = ttk.Label(infoColumn, text="City")
         self.city = ttk.Entry(infoColumn, width=30)
 
-        stateLbl = ttk.Label(infoColumn, text="State")
+        self.stateLbl = ttk.Label(infoColumn, text="State")
         self.state = ttk.Entry(infoColumn, width=30)
 
-        zipLbl = ttk.Label(infoColumn, text="Zip Code")
+        self.zipLbl = ttk.Label(infoColumn, text="Zip Code")
         self.zip = ttk.Entry(infoColumn)
 
-        titleLbl = ttk.Label(infoColumn, text="Title")
+        self.titleLbl = ttk.Label(infoColumn, text="Title")
         self.title = ttk.Entry(infoColumn)
         
         blankPay = ttk.Label(payStubColumn, text="")
 
         #TODO: Put actually paystub info in here.
-        payStubLbl = ttk.Label(payStubColumn, text="PayStub")
+        self.payStubLbl = ttk.Label(payStubColumn, text="PayStub")
         self.payStub = ttk.Entry(payStubColumn)
 
-        amountLbl = ttk.Label(payStubColumn, text="Amount")
+        self.amountLbl = ttk.Label(payStubColumn, text="Amount")
         self.amount = ttk.Entry(payStubColumn)
 
         '''
@@ -542,16 +577,16 @@ class EmployeePage(Page):
 
         self.entries = {
             blankInfo: None,
-            fNameLbl: self.fName,
-            lNameLbl: self.lName,
-            streetLbl: self.street,
-            cityLbl: self.city,
-            stateLbl: self.state,
-            zipLbl: self.zip,
-            titleLbl: self.title,
+            self.fNameLbl: self.fName,
+            self.lNameLbl: self.lName,
+            self.streetLbl: self.street,
+            self.cityLbl: self.city,
+            self.stateLbl: self.state,
+            self.zipLbl: self.zip,
+            self.titleLbl: self.title,
             blankPay: None,
-            payStubLbl: self.payStub,
-            amountLbl: self.amount
+            self.payStubLbl: self.payStub,
+            self.amountLbl: self.amount
         }
 
         self.personalInfo = [
