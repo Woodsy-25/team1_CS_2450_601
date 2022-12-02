@@ -13,6 +13,9 @@ import payroll
 import tkinter as tk
 from idlelib.tooltip import Hovertip
 import sv_ttk
+import re
+
+EMAIL_REGEX = re.compile(r"^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$")
 
 #the payroll code
 LARGE_FONT = ('Verdana', 20) # specify font and size
@@ -32,6 +35,7 @@ class PayrollApp(tk.Tk):
         self.container.pack(side="top", fill="both", expand=True)
         self.employeeID = 0
         self.currentUser = None
+        self.perms = USER_TYPE_EMPLOYEE
         self.previousPage = StartingPage
         self.currentPage = StartingPage
         self.frames = {}
@@ -218,9 +222,11 @@ class LoginPage(Page):
                 employeeID = login[2]
                 self.app.currentUser = payroll.find_employee_by_id(employeeID)
                 if login[3] == USER_TYPE_EMPLOYEE:
+                    self.app.perms = USER_TYPE_EMPLOYEE
                     self.app.init_frame(EmployeePage)
                     self.app.show_frame(EmployeePage)
                 elif login[3] == USER_TYPE_ADMIN:
+                    self.app.perms = USER_TYPE_ADMIN
                     self.app.init_frame(AdminPage)
                     self.app.show_frame(AdminPage)
                 self.userName.delete(0,END)
@@ -280,8 +286,6 @@ class AdminPage(Page):
         '''
         -----------------SEARCH EMPLOYEES-----------------
         '''
-        tableColumns = {"First Name":"first_name", "Last Name":"last_name", "ID":"id", "Office Email":"office_email", "Office Phone":"office_phone", "Title":"title", "Department":"dept"}
-        self.searchEmpTab.setTableColumns(tableColumns)
         self.searchEmpTab.initializeTable()
         self.exportBtn = ttk.Button(self, text="Export CSV", width=BTN_WIDTH, command=lambda: self.exportCSV())
 
@@ -393,14 +397,24 @@ class AdminPage(Page):
             self.exportBtn.pack(**self.actionPack)
 
     def addEmployee(self):
-        if self.validateForm:
-            payroll.add_employee(self.fName.get(), self.lName.get(), self.street.get(), self.city.get(), self.state.get(), self.zip.get(), self.classification.get(), self.amount.get(), self.dob.get(), self.ssn.get(), self.startDate.get(), self.account.get(), self.routing.get(), self.perms.get(), self.title.get(), self.dept.get(), self.email.get(), self.phone.get())
+        classification = self.classification.get()
+        amount = self.amount.get()
+        salary = commission = hourly = 0
+        if classification == 'Salary':
+            salary = amount
+        elif classification == 'Commission':
+            commission = amount
+        elif classification == 'Hourly':
+            hourly = amount
+        if self.validateForm():
+            payroll.add_employee(None, self.fName.get(), self.lName.get(), self.street.get(), self.city.get(), self.state.get(), self.zip.get(), self.classification.get(), salary, commission, hourly, self.dob.get(), self.ssn.get(), self.startDate.get(), self.account.get(), self.routing.get(), self.perms.get(), self.title.get(), self.dept.get(), self.email.get(), self.phone.get())
 
             messagebox.showinfo(message='Employee Added Successfully')
 
     def editEmployee(self, emp):
         self.action = 'EDIT'
         self.tabControl.tab(self.manageEmpTab, text='Edit Employee')
+        self.editingEmp = emp
 
         setEntry(self.fName, emp.get_first_name())
         setEntry(self.lName, emp.get_last_name())
@@ -452,7 +466,17 @@ class AdminPage(Page):
     def updateEmployee(self):
         if self.validateForm():
             #TODO: Update employee
+            emp = self.editingEmp
+            emp.set_first_name(self.fName.get())
+            emp.set_last_name(self.lName.get())
+            emp.set_street(self.street.get())
+            emp.set_city(self.city.get())
+            emp.set_state(self.state.get())
+            emp.set_zip(self.zip.get())
+            emp.set_title(self.title.get())
+
             messagebox.showinfo(message='Employee Updated Successfully')
+            self.action = 'NEW'
             self.tabControl.tab(self.manageEmpTab, text='Add Employee')
             saveBtnTip = Hovertip(self.saveBtn,'Add Employee')
 
@@ -473,11 +497,31 @@ class AdminPage(Page):
                 entry.delete(0,END)
 
             if self.action == 'EDIT':
+                self.action = 'NEW'
                 self.tabControl.tab(self.manageEmpTab, text='Add Employee')
                 self.tabControl.select(self.searchEmpTab)
 
 
     def validateForm(self):
+        classification = self.classification.get()
+        amount = self.amount.get()
+        salary = commission = hourly = 0
+        if classification == 'Salary':
+            salary = amount
+        elif classification == 'Commission':
+            commission = amount
+        elif classification == 'Hourly':
+            hourly = amount
+        self.requiredFields = [self.fName, self.lName, self.street, self.city, self.state, self.zip, self.classification, self.dob, self.ssn, self.startDate, self.account, self.routing, self.perms, self.title, self.dept, self.email, self.phone]
+        for field in self.requiredFields:
+            if (len(field.get()) < 1):
+                messagebox.showerror("Invalid", "Please enter all required fields")
+                self.fName.config(foreground='red')
+                return False
+        
+        if not re.fullmatch(EMAIL_REGEX, self.email.get()):
+            messagebox.showerror("Invalid", "Invalid Email address")
+            return False
         #TODO: make sure all required entries are filled and valid
         return True
 
@@ -637,7 +681,7 @@ class EmployeePage(Page):
             self.saveBtn.pack(**self.actionPack)        
             
     def savePersonalInfo(self, *args):
-        if (self.validateForm()):
+        if self.validateForm():
             for item in self.personalInfo:
                 item.config(state=DISABLED)
                 self.cancelBtn.pack_forget()
@@ -666,13 +710,10 @@ class searchFrame(ttk.Frame):
         ttk.Frame.__init__(self, parent)
         self.app = controller
 
-        self.parentPage = parent.master
-
-        self.tableColumns = {"First Name":"first_name", "Last Name":"last_name", "ID":"id", "Office Email":"office_email", "Office Phone":"office_phone"}
         style_tree = ttk.Style()
         # style_tree.map("t_style.Treeview", background=[("selected", "green")])
         style_tree.configure("t_style.Treeview", rowheight=25)
-        # style_tree.configure("t_style.Treeview.Heading",  font=('calibri', 16))
+        # style_tree.configure("t_style.Treeview.Heading", font=('calibri', 16))
     
         #create a search bar
         search_frame = tk.Frame(self)
@@ -703,21 +744,22 @@ class searchFrame(ttk.Frame):
 
 
     def initializeTable(self):
-        self.columnHeaders = list(self.tableColumns.keys())
-        self.columnNames = list(self.tableColumns.values())
+        # print(self.app.currentPage)
+        if self.app.perms == USER_TYPE_ADMIN:
+            self.columnHeaders = ["First Name", "Last Name", "ID", "Active", "Office Email", "Office Phone", "Title", "Department"]
+        else:
+            self.columnHeaders = ["First Name", "Last Name", "ID", "Active", "Office Email", "Office Phone"]
+
         self.clicked.set(str(self.columnHeaders[0]))
         self.filterDrop['values'] = self.columnHeaders
 
-        csvData = pd.read_csv(payroll.EMPLOYEES_FILE)
-        self.df = csvData.loc[:, self.columnNames]
-        self.df = self.df.sort_values(by="first_name")
         self.tree["column"] = self.columnHeaders
         self.tree["show"] = "headings"
 
         # Set column headers
         for column in self.tree["columns"]:
             self.tree.heading(column, text=column)
-            if column == 'ID':
+            if column == 'ID' or column == 'Active':
                 # Hide ID column
                 self.tree.column(column, minwidth=0, width=0, stretch=NO)
             elif column == "Office Email":
@@ -725,27 +767,24 @@ class searchFrame(ttk.Frame):
             else:
                 self.tree.column(column, minwidth=50, width=100, stretch=YES)
 
-    def setTableColumns(self, columns):
-        self.tableColumns = columns
-
     def loadSearchData(self, event=None):
         # Clear Data
+        empList = sorted(payroll.get_employee_list(self.app.perms == USER_TYPE_ADMIN), key=itemgetter(0))
         self.tree.delete(*self.tree.get_children())
 
-        le = len(self.searchBar.get())
+        searchLen = len(self.searchBar.get())
 
         self.tree.tag_configure('odd_row', background=self.app.color1)
         self.tree.tag_configure('even_row', background=self.app.color2)
-        if le == 0:
-            df_rows = self.df.to_numpy().tolist()
-            self.insertRows(df_rows)
+        self.tree.tag_configure('inactive', foreground='red')
+        if searchLen == 0:
+            self.insertRows(empList)
         else:
             s_key = self.columnHeaders.index(str(self.clicked.get()))
             s_list = []
-            df_rows = self.df.to_numpy().tolist()
-            for row in df_rows:
+            for row in empList:
                 val = row[s_key]
-                if self.searchBar.get().lower() == val[0:le].lower():
+                if self.searchBar.get().lower() == val[0:searchLen].lower():
                     s_list.append(row)
             s_list = sorted(s_list, key=itemgetter(s_key))
             self.insertRows(s_list)
@@ -753,10 +792,14 @@ class searchFrame(ttk.Frame):
     def insertRows(self, rows):
         count = 0
         for row in rows:
-            if count % 2 == 0:
-                self.tree.insert("", "end", values=row, tags=("even_row",))
+            if row[3]:
+                status = "active"
             else:
-                self.tree.insert("", "end", values=row, tags=("odd_row",))
+                status = "inactive"
+            if count % 2 == 0:
+                self.tree.insert("", "end", values=row, tags=("even_row", status))
+            else:
+                self.tree.insert("", "end", values=row, tags=("odd_row", status))
             count += 1
 
     def showEmpData(self, event):
@@ -769,7 +812,8 @@ class searchFrame(ttk.Frame):
         fName = rowValues[0]
         lName = rowValues[1]
         empID = rowValues[2]
-        Label(self.empWindow, text =f"{fName} {lName}", font=MEDIUM_FONT).pack()
+        self.empName = Label(self.empWindow, text =f"{fName} {lName}", font=MEDIUM_FONT)
+        self.empName.pack()
 
         selectedEmp = payroll.find_employee_by_id(empID)
 
@@ -805,12 +849,31 @@ class searchFrame(ttk.Frame):
 
         if self.app.currentPage == AdminPage:
             editBtn = ttk.Button(self.empWindow, text="Edit", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.editEmployee(selectedEmp))
-            editBtn.pack(pady = 10, padx=10)
-            #TODO: Add option to deactivate employee
+            editBtn.pack(pady = 10, padx=10, side=LEFT)
+            status = selectedEmp.get_status()
+            if status == 0:
+                self.empName.config(foreground='red')
+                self.statusBtn = ttk.Button(self.empWindow, text="Activate", width=BTN_WIDTH, command=lambda: self.toggleStatus(selectedEmp))
+            elif status == 1:
+                self.empName.config(foreground='black')
+                self.statusBtn = ttk.Button(self.empWindow, text="Deactivate", width=BTN_WIDTH, command=lambda: self.toggleStatus(selectedEmp))
+
+            self.statusBtn.pack(pady = 10, padx=10, side=RIGHT)
     
     def editEmployee(self, emp):
-        self.parentPage.editEmployee(emp)
+        self.master.master.editEmployee(emp)
         self.empWindow.destroy()
+
+    def toggleStatus(self, emp):
+        status = not emp.get_status()
+        emp.set_status(status)
+        if status:
+            self.empName.config(foreground='black')
+            self.statusBtn.config(text="Deactivate")
+        else:
+            self.empName.config(foreground='red')
+            self.statusBtn.config(text="Activate")
+        self.loadSearchData()
 
 def setEntry(entry, text):
     entry.delete(0,END)

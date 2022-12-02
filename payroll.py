@@ -1,4 +1,4 @@
-import os, os.path, shutil
+import os, os.path, shutil, uuid
 
 EMPLOYEES = []
 PAY_LOGFILE = 'paylog.txt'
@@ -19,8 +19,8 @@ def load_employees():
         for line in in_file:
             line = line.strip().split(',')
 
-            # set emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
-            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20])
+            # set emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, active)
+            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20], line[21])
 
             class_id = int(line[7]) # salary = 1, commisioned = 2, hourly = 3
             salary = float(line[8])
@@ -37,12 +37,24 @@ def load_employees():
 
             EMPLOYEES.append(emp)
 
+def get_employee_list(admin = False):
+    empList = []
+    for emp in EMPLOYEES:
+        if admin:
+            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.office_email, emp.office_phone, emp.title, emp.dept])
+        # If not admin, only show active employees
+        elif emp.active == 1:
+            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.office_email, emp.office_phone, emp.title, emp.dept])
 
+    return empList
+        
 def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
     """
     Adds a new employee to the EMPLOYEES list.
     """
-    emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
+    if emp_id == None:
+        emp_id = uuid.uuid4()
+    emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, 1)
     EMPLOYEES.append(emp)
 
 '''
@@ -111,7 +123,7 @@ def run_payroll():
                                         # object to compute the pay
 
 class Employee:
-    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone):
+    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone, active):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name
@@ -133,6 +145,7 @@ class Employee:
         self.dept = dept
         self.office_email = office_email
         self.office_phone = office_phone
+        self.active = int(active)
 
 
     def get_id(self):
@@ -179,6 +192,8 @@ class Employee:
         return self.office_email
     def get_office_phone(self):
         return self.office_phone
+    def get_status(self):
+        return self.active
 
 
 
@@ -226,6 +241,8 @@ class Employee:
         self.office_email = office_email
     def set_office_phone(self, office_phone):
         self.office_phone = office_phone
+    def set_status(self, status):
+        self.active = int(status) 
 
 
 
