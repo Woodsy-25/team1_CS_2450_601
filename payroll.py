@@ -45,6 +45,13 @@ def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, cl
     emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
     EMPLOYEES.append(emp)
 
+def edit_employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
+    """
+    Edits an existing employee in the EMPLOYEES list.
+    """
+    emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
+    EMPLOYEES.append(emp)
+
 '''
 def user_add_employee():
     """
@@ -109,6 +116,8 @@ def run_payroll():
     for emp in EMPLOYEES:               # EMPLOYEES is the global list of Employee objects
         emp.issue_payment()             # issue_payment calls a method in the classification
                                         # object to compute the pay
+                        
+
 
 class Employee:
     def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone):
@@ -150,7 +159,7 @@ class Employee:
     def get_zip(self):
         return self.zip
     def get_class(self):
-        return string(self.classification)
+        return (str(self.classification))
     def get_classification(self):
         return self.classification
     def get_salary(self):
@@ -179,7 +188,6 @@ class Employee:
         return self.office_email
     def get_office_phone(self):
         return self.office_phone
-
 
 
     def set_id(self, emp_id):
@@ -304,9 +312,6 @@ def main():
     process_timecards()
     process_receipts()
     run_payroll()
-
-    for i in EMPLOYEES:
-        print(i.first_name)
 
     # Save copy of payroll file; delete old file
     shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')

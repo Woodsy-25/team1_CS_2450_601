@@ -14,6 +14,9 @@ import tkinter as tk
 from idlelib.tooltip import Hovertip
 import sv_ttk
 import os
+import subprocess
+
+subprocess.Popen('pip install -r requirements.txt', shell=True)
 
 #the payroll code
 LARGE_FONT = ('Verdana', 20) # specify font and size
@@ -650,6 +653,7 @@ class EmployeePage(Page):
             payroll.set_state(self.state.get())
             payroll.set_zip(self.zip.get())
             payroll.set_title(self.title.get())
+
 
     def validateForm(self):
         return True
