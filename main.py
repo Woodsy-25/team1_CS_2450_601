@@ -1,342 +1,887 @@
+'''
+This is the main program that curretly holds both the code from the employee project and also hold the code for the GUI.
+'''
+
+
 import tkinter as tk
 from tkinter import *
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, messagebox
+from payroll import *
+import pandas as pd
+from operator import itemgetter
+import payroll
+import tkinter as tk
+from idlelib.tooltip import Hovertip
+import sv_ttk
+import re
+import subprocess
 
+EMAIL_REGEX = re.compile(r"^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$")
+
+subprocess.Popen('pip install -r requirements.txt', shell=True)
 
 #the payroll code
-import os, os.path, shutil
-
-EMPLOYEES = []
-PAY_LOGFILE = 'paylog.txt'
-
-def load_employees():
-    """
-    Reads EMPLOYEES.csv by line, creating Employee objects initialized with their string attributes.
-    Creates and assigns the appropriate classification instance for the employee as an attribute.
-    Adds the Employee object to a global list of EMPLOYEES.
-    """
-
-    with open('EMPLOYEES.csv', 'r', encoding="utf-8") as in_file:
-        next(in_file) # skip header
-
-        for line in in_file:
-            line = line.strip().split(',')
-
-            # set emp_id, first_name, last_name, address, city, state, zipcode
-            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], None)
-
-            class_id = int(line[7]) # salary = 1, commisioned = 2, hourly = 3
-            salary = float(line[8])
-            commission_rate = float(line[9])
-            hourly_rate = float(line[10])
-
-            # set classification
-            if class_id == 1:
-                emp.make_salaried(salary)
-            elif class_id == 2:
-                emp.make_commissioned(salary, commission_rate)
-            elif class_id == 3:
-                emp.make_hourly(hourly_rate)
-
-            EMPLOYEES.append(emp)
-
-def add_employee(emp_id, first_name, last_name, address, city, state, zipcode):
-    """
-    Adds a new employee to the EMPLOYEES list.
-    """
-    emp = Employee(emp_id, first_name, last_name, address, city, state, zipcode, None)
-    EMPLOYEES.append(emp)
-
-def user_add_employee():
-    """
-    Prompts the user for employee information and adds the employee to the EMPLOYEES list.
-    """
-    emp_id = input('Enter employee ID: ')
-    first_name = input('Enter first name: ')
-    last_name = input('Enter last name: ')
-    address = input('Enter address: ')
-    city = input('Enter city: ')
-    state = input('Enter state: ')
-    zipcode = input('Enter zipcode: ')
-    add_employee(emp_id, first_name, last_name, address, city, state, zipcode)
-
-user_add_employee
-
-def find_employee_by_id(emp_id):
-    """Returns the Employee object of a given ID."""
-    for emp in EMPLOYEES:
-        if emp.emp_id == emp_id:
-            return emp
-
-def process_timecards():
-    """
-    Reads timecards.csv and adds each hourly record to a list
-    in each 'Hourly' employee's classification object.
-    """
-
-    with open('timecards.csv', 'r', encoding="utf-8") as in_file:
-        for line in in_file:
-            line = line.strip().split(',')
-            emp_id = line[0]
-            emp = find_employee_by_id(emp_id)
-
-            if len(line) > 1: # if the employee has timecard data
-                timecards = line[1:]
-
-                for timecard in timecards:
-                    emp.classification.add_timecard(float(timecard))
-
-def process_receipts():
-    """
-    Reads receipts.csv and adds each receipt to a list
-    in each 'Commissioned' employee's classification object.
-    """
-
-    with open('receipts.csv', 'r', encoding="utf-8") as in_file:
-        for line in in_file:
-            line = line.strip().split(',')
-            emp_id = line[0]
-            emp = find_employee_by_id(emp_id)
-
-            if len(line) > 1: # if the employee has receipt data
-                receipts = line[1:]
-
-                for receipt in receipts:
-                    emp.classification.add_receipt(float(receipt))
-
-def run_payroll():
-    if os.path.exists(PAY_LOGFILE): # pay_log_file is a global variable holding ‘paylog.txt’
-        os.remove(PAY_LOGFILE)
-    for emp in EMPLOYEES:               # EMPLOYEES is the global list of Employee objects
-        emp.issue_payment()             # issue_payment calls a method in the classification
-                                        # object to compute the pay
-
-class Employee:
-    def __init__(self, emp_id, first_name, last_name, address, city, state, zipcode, classification):
-        self.emp_id = emp_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.address = address
-        self.city = city
-        self.state = state
-        self.zipcode = zipcode
-        self.classification = classification
-
-    def make_salaried(self, salary):
-        """Changes employee classification to 'salaried' with the given salary."""
-        self.classification = Salaried(salary)
-
-    def make_commissioned(self, salary, commision_rate):
-        """Changes employee classification to 'commissioned'
-        with the given salary and commission rate."""
-        self.classification = Commisioned(salary, commision_rate)
-
-    def make_hourly(self, hourly_rate):
-        """Changes employee classification to 'hourly' with the given hourly rate."""
-        self.classification = Hourly(hourly_rate)
-
-    def issue_payment(self):
-        """Appends employee payment information to paylog.txt"""
-        pay = self.classification.compute_pay()
-        message = f'Mailing {pay:0.2f} to {self.first_name} {self.last_name} at '\
-        f'{self.address} {self.city} {self.state} {self.zipcode}\n'
-
-        with open('paylog.txt', 'a', encoding="utf-8") as out_file:
-            out_file.write(message)
-
-class Classification:
-    def compute_pay(self):
-        """Abstract method for computing pay."""
-
-class Salaried(Classification):
-    def __init__(self, salary):
-        self.salary = salary
-
-    def compute_pay(self): # override method
-        """Returns the employee's salaried pay."""
-        pay = self.salary / 24 # 24 pay periods per year
-
-        return round(pay, 2)
-
-class Commisioned(Salaried):
-    def __init__(self, salary, commission_rate):
-        super().__init__(salary)
-        self.commission_rate = commission_rate / 100
-        self._receipts = []
-
-    def compute_pay(self): # override method
-        """Returns the employee's salaried pay plus commission."""
-        pay = self.salary / 24 # 24 pay periods per year
-        comm = self.commission_rate * sum(self._receipts)
-        self._receipts.clear()
-
-        return round(pay + comm, 2)
-
-    def add_receipt(self, receipt):
-        """Adds a receipt to a private list."""
-        self._receipts.append(receipt)
-
-class Hourly(Classification):
-    def __init__(self, hourly_rate):
-        self.hourly_rate = hourly_rate
-        self._timecards = []
-
-    def compute_pay(self): # override method
-        """Returns the employee's hourly pay."""
-        pay = self.hourly_rate * sum(self._timecards)
-        self._timecards.clear()
-
-        return round(pay, 2)
-
-    def add_timecard(self, timecard):
-        """Adds a timecard to a private list."""
-        self._timecards.append(timecard)
-
-largefont = ('Verdana', 20) # specify font and size
+LARGE_FONT = ('Verdana', 20) # specify font and size
+MEDIUM_FONT = ('Verdana', 15)
+USER_TYPE_EMPLOYEE = '1'
+USER_TYPE_ADMIN = '2'
+BTN_WIDTH = 12
 
 class PayrollApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-
-        container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
-
+        #size of the window
+        tk.Tk.geometry(self, "800x650")
+        self.minsize(800, 650)
+        self.title('Employee Payroll')
+        self.container = ttk.Frame(self)
+        self.container.pack(side="top", fill="both", expand=True)
+        self.employeeID = 0
+        self.currentUser = None
+        self.perms = USER_TYPE_EMPLOYEE
+        self.previousPage = StartingPage
+        self.currentPage = StartingPage
         self.frames = {}
 
-        for f in (StartingPage, LoginPage, AdminPage, AddEmployeePage):
-            frame = f(container, self)
-            self.frames[f] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
-        
+        # Theming 
+        self.color1 = "#fafafa"
+        self.color2 = "#e7e7e7"
+        self.color3 = "#5f5f5f"
+
+        for page in (StartingPage, LoginPage, HelpPage):
+            self.init_frame(page)   
+
         self.show_frame(StartingPage)
 
-    def show_frame(self, cont):
-        frame = self.frames[cont]
-        frame.tkraise()
+    def init_frame(self, page):
+        frame = page(self.container, self)
+        self.frames[page] = frame
 
-class StartingPage(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+    def show_frame(self, page):
+        self.previousPage = self.currentPage
+        self.currentPage = page
+        self.clear_frames()
+        frame = self.frames[page]
+        frame.pack(side="top", fill=BOTH, expand=True)
+        frame.pack_elements()
+        frame.setBindings(self)
 
-        label = tk.Label(self, text="Welcome to the Payroll System", font=largefont)
-        label.pack(pady=10, padx=10)
+    def go_back(self):
+        self.show_frame(self.previousPage)
 
-        button1 = ttk.Button(self, text="Login", command=lambda: controller.show_frame(LoginPage))
-        button1.pack()
+    def clear_frames(self):
+        for cont in self.frames:
+            frame = self.frames[cont]
+            frame.pack_forget()
 
-        button2 = ttk.Button(self, text="Quit", command=quit)
-        button2.pack()
+    def toggleTheme(self):
+        sv_ttk.toggle_theme()
 
-'''
-checks the username and password against the database
-if it is correct then it will log it into its level
-'''
-def login(entry1, entry2):
-        if entry1 == "admin" and entry2 == "admin":
-            #opening admin page
-            app.show_frame(AdminPage)
+        if sv_ttk.get_theme() == "dark":
+            self.color1 = "#1c1c1c"
+            self.color2 = "#2f2f2f"
+            self.color3 = "#d4d4d4"
         else:
-            messagebox.showerror("Error", "Invalid username or password")
+            self.color1 = "#fafafa"
+            self.color2 = "#e7e7e7"
+            self.color3 = "#5f5f5f"
 
-class LoginPage(tk.Frame):
+
+class Page(ttk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        ttk.Frame.__init__(self, parent)
+        self.parentPage = StartingPage
+        self.show_toolbar = False
+        self.entries = {}
+        self.bottomButtons = []
+        self.app = controller
 
-        label = tk.Label(self, text="Login", font=largefont)
-        label.pack(pady=10, padx=10)
-
-        label1 = tk.Label(self, text="Username")
-        label1.pack()
-
-        entry1 = tk.Entry(self)
-        entry1.pack()
-
-        label2 = tk.Label(self, text="Password")
-        label2.pack()
-
-        entry2 = tk.Entry(self)
-        entry2.pack()
-
-        #check if username and password are correct
-        button1 = ttk.Button(self, text="Login", command=lambda: login(entry1.get(), entry2.get()))
-        button1.pack()
+        # Configs only work for tk. Use themes for ttk.
+        # self.invalidEntryConfig = {'width':200}
+        self.entryConfig = {'width': 50}
         
 
-        button2 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(StartingPage))
-        button2.pack()
+        self.labelPack = {'anchor' : W, 'padx' : 200}
+        self.entryPack = {'pady' : (0,5), 'padx' : 200, 'fill' : X}
+        self.buttonPack = {'pady' : 5}
+        self.actionPack = {'side' : "left", 'pady' : 10, 'padx' : (10, 0)}
 
-class AdminPage(tk.Frame):
+
+    def basicEntries(self, parent):
+        self.fNameLbl = ttk.Label(parent, text="First Name")
+        self.fName = ttk.Entry(parent, width=30)
+
+        self.lNameLbl = ttk.Label(parent, text="Last Name")
+        self.lName = ttk.Entry(parent, width=30)
+
+        self.streetLbl = ttk.Label(parent, text="Street")
+        self.street = ttk.Entry(parent, width=30)
+
+        self.cityLbl = ttk.Label(parent, text="City")
+        self.city = ttk.Entry(parent, width=30)
+
+        self.stateLbl = ttk.Label(parent, text="State")
+        self.state = ttk.Entry(parent, width=30)
+
+        self.zipLbl = ttk.Label(parent, text="Zip Code")
+        self.zip = ttk.Entry(parent)
+
+        self.titleLbl = ttk.Label(parent, text="Title")
+        self.title = ttk.Entry(parent)
+
+        
+    def setBindings(self, controller):
+        pass
+
+    def pack_elements(self):
+        self.labelConfig = {'font':("Arial", 8), 'foreground': self.app.color3}
+        self.pageTitle.pack(pady=10, padx=10)
+
+        for label, entry in self.entries.items():
+            label.config(**self.labelConfig)
+            label.pack(**self.labelPack)
+
+            if entry != None:
+                entry.pack(**self.entryPack)
+
+        for button in self.bottomButtons:
+            button.pack(**self.buttonPack)
+            button.config(width=BTN_WIDTH)
+
+    def logout(self, *args):
+        confirm = messagebox.askyesno('Confirm', 'Are you sure you want to log out?')
+        if confirm:
+            self.app.show_frame(StartingPage)
+
+
+class StartingPage(Page):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        Page.__init__(self, parent, controller)
 
-        label = tk.Label(self, text="Admin Page", font=largefont)
-        label.pack(pady=10, padx=10)
+        self.pageTitle = ttk.Label(self, text="Welcome to the Payroll System", font=LARGE_FONT)
 
-        #add employee
-        button1 = ttk.Button(self, text="Add Employee", command=lambda: controller.show_frame(AddEmployeePage))
-        button1.pack()
+        self.loginBtn = ttk.Button(self, text="Login", command=lambda: self.showLogin())
 
-        button2 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(LoginPage))
-        button2.pack()
+        self.quitBtn = ttk.Button(self, text="Quit", command=quit)
+        
+        self.bottomButtons = [self.loginBtn, self.quitBtn]
+        #toggle themes
+        theme_button = ttk.Button(self, text="Toggle Theme", command=controller.toggleTheme)
+        theme_button.pack(side = BOTTOM)
 
-class AddEmployeePage(tk.Frame):
+    def setBindings(self, controller):
+        self.loginBtn.focus()
+        controller.bind("<Return>", self.showLogin)
+
+    def showLogin(self, *args):
+        self.app.show_frame(LoginPage)
+
+
+class HelpPage(Page):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        Page.__init__(self, parent, controller)
+        self.parentPage
+        self.pageTitle = ttk.Label(self, text="Help Page", font=LARGE_FONT)
 
-        label = tk.Label(self, text="Add Employee", font=largefont)
-        label.pack(pady=10, padx=10)
+        self.help = ttk.Label(self, text="(Helpful information will be displayed here)", font=MEDIUM_FONT)
+        self.entries = {self.help: None}
+
+        self.backBtn = ttk.Button(self, text="Back", command=lambda: controller.go_back())
+
+        self.bottomButtons = [self.backBtn]
+
+
+
+'''
+-----------------LOGIN PAGE-----------------
+'''
+
+class LoginPage(Page):
+    def __init__(self, parent, controller):
+        Page.__init__(self, parent, controller)
+
+        self.parentPage = StartingPage
+        self.pageTitle = ttk.Label(self, text="Login", font=LARGE_FONT)
+
+        label1 = ttk.Label(self, text="Username")
+        self.userName = ttk.Entry(self)
+        
+        label2 = ttk.Label(self, text="Password")
+        self.password = ttk.Entry(self, show = "*")
+
+        self.loginBtn = ttk.Button(self, text="Login", command=lambda: self.login())
+        self.backBtn = ttk.Button(self, text="Back", command=lambda: controller.go_back())
+
+        self.entries = {label1: self.userName, label2: self.password}
+        self.bottomButtons = [self.loginBtn, self.backBtn]
+
+    def setBindings(self, controller):
+        self.userName.focus()
+        controller.bind("<Return>", self.login)
+
+    def login(self, *args):
+        for login in logins:
+            if self.userName.get() == login[0] and self.password.get() == login[1]:
+                employeeID = login[2]
+                self.app.currentUser = payroll.find_employee_by_id(employeeID)
+                if login[3] == USER_TYPE_EMPLOYEE:
+                    self.app.perms = USER_TYPE_EMPLOYEE
+                    self.app.init_frame(EmployeePage)
+                    self.app.show_frame(EmployeePage)
+                elif login[3] == USER_TYPE_ADMIN:
+                    self.app.perms = USER_TYPE_ADMIN
+                    self.app.init_frame(AdminPage)
+                    self.app.show_frame(AdminPage)
+                self.userName.delete(0,END)
+                self.password.delete(0,END)
+                return
+        messagebox.showerror("Error", "Invalid username or password")
+
+'''
+-----------------ADMIN PAGE-----------------
+'''
+
+class AdminPage(Page):
+    def __init__(self, parent, controller):
+        Page.__init__(self, parent, controller)
+
+        self.pageTitle = ttk.Label(self, text="Admin Page", font=LARGE_FONT)
+        self.pageTitle.pack(pady=10, padx=10)
+
+        self.action = 'NEW'
+
+        #add tabs to switch frames
+        self.tabControl = ttk.Notebook(self)
+        #add tabs with
+        self.manageEmpTab = ttk.Frame(self.tabControl)
+        self.editEmpTab = ttk.Frame(self.tabControl)
+        self.searchEmpTab = searchFrame(self.tabControl, controller)
+
+        #open add employee page
+        self.tabControl.add(self.manageEmpTab, text='Add Employee')
+        self.tabControl.add(self.searchEmpTab, text='Search Employees')
+        self.tabControl.pack(expand=1, fill="both")
+        self.tabControl.bind('<<NotebookTabChanged>>', self.changeTab)
+
+        self.labelPack = {'anchor' : W, 'padx' : 20}
+        self.entryPack = {'pady' : (0,5), 'padx' : 20, 'fill' : X}
+
+        #put logout button on the top right
+        self.logoutBtn = ttk.Button(self, text="Logout", width=BTN_WIDTH, command=lambda: self.logout())
+        self.logoutBtn.pack(side="right", padx=10, pady=10)
+
+        self.helpBtn = ttk.Button(self, text="?", width=2, command=lambda: controller.show_frame(HelpPage))
+        self.helpBtn.pack(side="right", pady=10)
+        helpBtnTip = Hovertip(self.helpBtn,'Help')
+
+
+
+        '''
+        -----------------MANAGE EMPLOYEE-----------------
+        '''
+        self.addColumns(self.manageEmpTab)
+        self.addEntries()
+        self.saveBtn = ttk.Button(self, text="Save", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.saveEmployee())
+        self.cancelBtn = ttk.Button(self, text="Cancel", width=BTN_WIDTH, command=lambda: self.cancelEdit())
+
+        saveBtnTip = Hovertip(self.saveBtn,'Add Employee')
+
+        '''
+        -----------------SEARCH EMPLOYEES-----------------
+        '''
+        self.searchEmpTab.initializeTable()
+        self.exportBtn = ttk.Button(self, text="Export CSV", width=BTN_WIDTH, command=lambda: self.exportCSV())
+
+
+    def addColumns(self, parent):
+        self.column1 = ttk.Frame(parent)
+        self.column1.pack(pady=10, side="left", expand=1, fill="both")
+        self.column2 = ttk.Frame(parent)
+        self.column2.pack(pady=10, side="left", expand=1, fill="both")
+
+    def addEntries(self):
+        self.fNameLbl = ttk.Label(self.column1, text="First Name")
+        self.fName = ttk.Entry(self.column1)
+
+        self.lNameLbl = ttk.Label(self.column1, text="Last Name")
+        self.lName = ttk.Entry(self.column1)
+
+        self.streetLbl = ttk.Label(self.column1, text="Street")
+        self.street = ttk.Entry(self.column1)
+
+        self.cityLbl = ttk.Label(self.column1, text="City")
+        self.city = ttk.Entry(self.column1)
+
+        self.stateLbl = ttk.Label(self.column1, text="State")
+        self.state = ttk.Entry(self.column1)
+
+        self.zipLbl = ttk.Label(self.column1, text="Zip Code")
+        self.zip = ttk.Entry(self.column1)
+
+        self.titleLbl = ttk.Label(self.column2, text="Title")
+        self.title = ttk.Entry(self.column2)
+
+        self.dobLbl = ttk.Label(self.column1, text="Date of Birth")
+        self.dob = ttk.Entry(self.column1)
+
+        self.amountLbl = ttk.Label(self.column2, text="Amount")
+        self.amount = ttk.Entry(self.column2)
+
+        self.ssnLbl = ttk.Label(self.column2, text="SSN")
+        self.ssn = ttk.Entry(self.column2)
+
+        self.startDateLbl = ttk.Label(self.column2, text="Start Date")
+        self.startDate = ttk.Entry(self.column2)
+
+        self.accountLbl = ttk.Label(self.column2, text="Account Number")
+        self.account = ttk.Entry(self.column2)
+
+        self.routingLbl = ttk.Label(self.column2, text="Routing Number")
+        self.routing = ttk.Entry(self.column2)
+
+        self.emailLbl = ttk.Label(self.column1, text="Office Email")
+        self.email = ttk.Entry(self.column1)
+
+        self.phoneLbl = ttk.Label(self.column1, text="Office Phone")
+        self.phone = ttk.Entry(self.column1)
+
+        # Classification Dropdown
+        self.classificationLbl = ttk.Label(self.column2, text="Classification")
+        self.classification = StringVar()
+        self.classSelect = ttk.Combobox(self.column2, textvariable=self.classification)
+        self.classSelect['values'] = ['Salary', 'Commission', 'Hourly']
+        self.classSelect.state(['readonly'])
+
+        # Department Dropdown
+        self.deptLbl = ttk.Label(self.column2, text="Department")
+        self.dept = StringVar()
+        self.deptSelect = ttk.Combobox(self.column2, textvariable=self.dept)
+        self.deptSelect['values'] = ['Engineering', 'Finance', 'HR', 'IT',  'Legal', 'Marketing', 'Operations',  'Sales']
+        self.deptSelect.state(['readonly'])
+
+        # Permissions Dropdown
+        self.permsLbl = ttk.Label(self.column2, text="Permissions")
+        self.perms = StringVar()
+        self.permSelect = ttk.Combobox(self.column2, textvariable=self.perms)
+        self.permSelect['values'] = ['Admin', 'Employee']
+        self.permSelect.state(['readonly'])
+
+        self.entries = {
+            self.fNameLbl: self.fName,
+            self.lNameLbl: self.lName,
+            self.streetLbl: self.street,
+            self.cityLbl: self.city,
+            self.stateLbl: self.state,
+            self.zipLbl: self.zip,
+            self.dobLbl: self.dob,
+            self.emailLbl: self.email,
+            self.phoneLbl: self.phone,
+            self.titleLbl: self.title,
+            self.ssnLbl: self.ssn,
+            self.classificationLbl: self.classSelect,
+            self.amountLbl: self.amount,
+            self.startDateLbl: self.startDate,
+            self.accountLbl: self.account,
+            self.routingLbl: self.routing,
+            self.permsLbl: self.permSelect,
+            self.deptLbl: self.deptSelect
+        }
+
+    def changeTab(self, *args):
+        tab = self.tabControl.index(self.tabControl.select())
+        if tab == 0:
+            self.exportBtn.pack_forget()
+            self.cancelBtn.pack(**self.actionPack)
+            self.saveBtn.pack(**self.actionPack)
+        if tab == 1:
+            self.searchEmpTab.loadSearchData()
+            self.cancelBtn.pack_forget()
+            self.saveBtn.pack_forget()
+            self.exportBtn.pack(**self.actionPack)
+
+    def addEmployee(self):
+        classification = self.classification.get()
+        amount = self.amount.get()
+        salary = commission = hourly = 0
+        if classification == 'Salary':
+            salary = amount
+        elif classification == 'Commission':
+            commission = amount
+        elif classification == 'Hourly':
+            hourly = amount
+        if self.validateForm():
+            payroll.add_employee(None, self.fName.get(), self.lName.get(), self.street.get(), self.city.get(), self.state.get(), self.zip.get(), self.classification.get(), salary, commission, hourly, self.dob.get(), self.ssn.get(), self.startDate.get(), self.account.get(), self.routing.get(), self.perms.get(), self.title.get(), self.dept.get(), self.email.get(), self.phone.get())
+
+            messagebox.showinfo(message='Employee Added Successfully')
+
+    def editEmployee(self, emp):
+        self.action = 'EDIT'
+        self.tabControl.tab(self.manageEmpTab, text='Edit Employee')
+        self.editingEmp = emp
+
+        setEntry(self.fName, emp.get_first_name())
+        setEntry(self.lName, emp.get_last_name())
+        setEntry(self.street, emp.get_street())
+        setEntry(self.city, emp.get_city())
+        setEntry(self.state, emp.get_state())
+        setEntry(self.zip, emp.get_zip())
+        setEntry(self.title, emp.get_title())
+        setEntry(self.email, emp.get_office_email())
+        setEntry(self.phone, emp.get_office_phone())
+        setEntry(self.dob, emp.get_dob())
+        setEntry(self.ssn, emp.get_ssn())
+
+        # Set classification dropdown
+        classification = emp.get_classification()
+        amount = ""
+        if isinstance(classification, payroll.Salaried):
+            classification = 0
+            amount = emp.get_salary()
+        elif isinstance(classification, payroll.Commisioned):
+            classification = 1
+            amount = emp.get_commission()
+        elif isinstance(classification, payroll.Hourly):
+            classification = 2
+            amount = emp.get_hourly()
+        self.classSelect.current(classification)
+        setEntry(self.amount, amount)
+
+        # Set department dropdown
+        dept = emp.get_dept()
+        for i in range(0, len(self.deptSelect['values'])):
+            if self.deptSelect['values'][i] == dept:
+                self.deptSelect.current(i)
+
+        # Set permissions dropdown
+        perms = emp.get_permissions()
+        if perms == '1':
+            self.permSelect.current(1)
+        elif perms == '2':
+            self.permSelect.current(0)
+
+        setEntry(self.startDate, emp.get_start_date())
+        setEntry(self.account, emp.get_account())
+        setEntry(self.routing, emp.get_routing_num())
+
+        self.tabControl.select(self.manageEmpTab) 
+
+
+    def updateEmployee(self):
+        if self.validateForm():
+            #TODO: Update employee
+            emp = self.editingEmp
+            emp.set_first_name(self.fName.get())
+            emp.set_last_name(self.lName.get())
+            emp.set_street(self.street.get())
+            emp.set_city(self.city.get())
+            emp.set_state(self.state.get())
+            emp.set_zip(self.zip.get())
+            emp.set_title(self.title.get())
+
+            messagebox.showinfo(message='Employee Updated Successfully')
+            self.action = 'NEW'
+            self.tabControl.tab(self.manageEmpTab, text='Add Employee')
+            saveBtnTip = Hovertip(self.saveBtn,'Add Employee')
+
+            self.tabControl.select(self.searchEmpTab)
+            for entry in self.entries.values():
+                entry.delete(0,END)
+
+    def saveEmployee(self):
+        if self.action == 'NEW':
+            self.addEmployee()
+        elif self.action == 'EDIT':
+            self.updateEmployee()
+
+    def cancelEdit(self):
+        confirm = messagebox.askyesno('Are you sure?', 'Changes will be lost')
+        if confirm:
+            for entry in self.entries.values():
+                entry.delete(0,END)
+
+            if self.action == 'EDIT':
+                self.action = 'NEW'
+                self.tabControl.tab(self.manageEmpTab, text='Add Employee')
+                self.tabControl.select(self.searchEmpTab)
+
+
+    def validateForm(self):
+        classification = self.classification.get()
+        amount = self.amount.get()
+        salary = commission = hourly = 0
+        if classification == 'Salary':
+            salary = amount
+        elif classification == 'Commission':
+            commission = amount
+        elif classification == 'Hourly':
+            hourly = amount
+        self.requiredFields = [self.fName, self.lName, self.street, self.city, self.state, self.zip, self.classification, self.dob, self.ssn, self.startDate, self.account, self.routing, self.perms, self.title, self.dept, self.email, self.phone]
+        for field in self.requiredFields:
+            if (len(field.get()) < 1):
+                messagebox.showerror("Invalid", "Please enter all required fields")
+                self.fName.config(foreground='red')
+                return False
+        
+        if not re.fullmatch(EMAIL_REGEX, self.email.get()):
+            messagebox.showerror("Invalid", "Invalid Email address")
+            return False
+        #TODO: make sure all required entries are filled and valid
+        return True
+
+    def exportCSV(self):
+        print('EXPORTING')
+
+    def setBindings(self, controller):
+        self.fName.focus()
+        # controller.bind("<Return>", self.login)
+
+'''
+-----------------EMPLOYEE PAGE-----------------
+'''
+
+class EmployeePage(Page):
+    def __init__(self, parent, controller):
+        Page.__init__(self, parent, controller)
+        self.pageTitle = ttk.Label(self, text="Employee Page", font=LARGE_FONT)
+        self.pageTitle.pack(pady=10, padx=10)
+
+        #add tabs to switch frames
+        self.tabControl = ttk.Notebook(self)
+        #add tabs with
+        profileTab = ttk.Frame(self.tabControl)
+        self.searchEmpTab = searchFrame(self.tabControl, controller)
+        self.tabControl.add(profileTab, text='Profile')
+        self.tabControl.add(self.searchEmpTab, text='Directory')
+        self.tabControl.pack(expand=1, fill="both")
+        self.tabControl.bind('<<NotebookTabChanged>>', self.changeTab)
+
+        self.labelPack = {'anchor' : W, 'padx' : 20}
+        self.entryPack = {'pady' : (0,5), 'padx' : 20, 'fill' : X}
+
+        infoColumn = ttk.Labelframe(profileTab, text='Personal Information')
+        infoColumn.pack(padx=10, pady=10, ipady=30, side="left", fill="both")
+
+        payStubColumn = ttk.Labelframe(profileTab, text='Pay Stub')
+        payStubColumn.pack(padx=10, pady=10, ipady=30, side="left", expand=1, fill="both")
+        self.editBtn = ttk.Button(self, text="Edit", width=BTN_WIDTH, command=lambda: self.editPersonalInfo())
+        self.saveBtn = ttk.Button(self, text="Save", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.savePersonalInfo())
+
+        editBtnTip = Hovertip(self.editBtn,'Edit Personal Information')
+        saveBtnTip = Hovertip(self.saveBtn,'Save Personal Information')
+
+        self.cancelBtn = ttk.Button(self, text="Cancel", width=BTN_WIDTH, command=lambda: self.loadPersonalInfo())
+
+        #put logout button on the bottom right
+        self.logoutBtn = ttk.Button(self, text="Logout", width=BTN_WIDTH, command=lambda: self.logout())
+        self.logoutBtn.pack(side="right", padx=10, pady=10)
+
+        self.helpBtn = ttk.Button(self, text="?", width=2, command=lambda: controller.show_frame(HelpPage))
+        self.helpBtn.pack(side="right", pady=10)
+        helpBtnTip = Hovertip(self.helpBtn,'Help')
+
+        # button1 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(AdminPage))
+        # button1.pack()
+        '''
+        -----------------PROFILE TAB-----------------
+        '''
+
+        #inner padding not working so use blank label
+        blankInfo = ttk.Label(infoColumn, text="")
+        
+        self.fNameLbl = ttk.Label(infoColumn, text="First Name")
+        self.fName = ttk.Entry(infoColumn, width=30)
+
+        self.lNameLbl = ttk.Label(infoColumn, text="Last Name")
+        self.lName = ttk.Entry(infoColumn, width=30)
+
+        self.streetLbl = ttk.Label(infoColumn, text="Street")
+        self.street = ttk.Entry(infoColumn, width=30)
+
+        self.cityLbl = ttk.Label(infoColumn, text="City")
+        self.city = ttk.Entry(infoColumn, width=30)
+
+        self.stateLbl = ttk.Label(infoColumn, text="State")
+        self.state = ttk.Entry(infoColumn, width=30)
+
+        self.zipLbl = ttk.Label(infoColumn, text="Zip Code")
+        self.zip = ttk.Entry(infoColumn)
+
+        self.titleLbl = ttk.Label(infoColumn, text="Title")
+        self.title = ttk.Entry(infoColumn)
+        
+        blankPay = ttk.Label(payStubColumn, text="")
+
+        #TODO: Put actual paystub info in here. Make them labels.
+        self.payStubLbl = ttk.Label(payStubColumn, text="PayStub")
+        self.payStub = ttk.Entry(payStubColumn, state=DISABLED)
+
+        self.amountLbl = ttk.Label(payStubColumn, text="Amount")
+        self.amount = ttk.Entry(payStubColumn, state=DISABLED)
+
+        '''
+        -----------------DIRECTORY TAB-----------------
+        '''
+
+        self.searchEmpTab.initializeTable()
+
+        self.entries = {
+            blankInfo: None,
+            self.fNameLbl: self.fName,
+            self.lNameLbl: self.lName,
+            self.streetLbl: self.street,
+            self.cityLbl: self.city,
+            self.stateLbl: self.state,
+            self.zipLbl: self.zip,
+            self.titleLbl: self.title,
+            blankPay: None,
+            self.payStubLbl: self.payStub,
+            self.amountLbl: self.amount
+        }
+
+        self.personalInfo = [
+            self.fName,
+            self.lName,
+            self.street,
+            self.city,
+            self.state,
+            self.zip,
+            self.title
+        ]
+
+    def changeTab(self, *args):
+        tab = self.tabControl.index(self.tabControl.select())
+        if tab == 0:
+            self.loadPersonalInfo()
+        if tab == 1:
+            self.searchEmpTab.loadSearchData()
+            self.editBtn.pack_forget()
+            self.cancelBtn.pack_forget()
+            self.saveBtn.pack_forget()
+
+    def loadPersonalInfo(self, *args):
+        emp = self.app.currentUser
+        setEntry(self.fName, emp.get_first_name())
+        setEntry(self.lName, emp.get_last_name())
+        setEntry(self.street, emp.get_street())
+        setEntry(self.city, emp.get_city())
+        setEntry(self.state, emp.get_state())
+        setEntry(self.zip, emp.get_zip())
+        setEntry(self.title, emp.get_title())
+        for item in self.personalInfo:
+            item.config(state=DISABLED) # or 'readonly'?
+
+        self.editBtn.pack_forget()
+        self.cancelBtn.pack_forget()
+        self.saveBtn.pack_forget()
+        self.editBtn.pack(**self.actionPack)
+
+
+    def editPersonalInfo(self, *args):
+        for item in self.personalInfo:
+            item.config(state=NORMAL)
+            self.editBtn.pack_forget()
+            self.cancelBtn.pack(**self.actionPack)        
+            self.saveBtn.pack(**self.actionPack)        
+            
+    def savePersonalInfo(self, *args):
+        if self.validateForm():
+            for item in self.personalInfo:
+                item.config(state=DISABLED)
+                self.cancelBtn.pack_forget()
+                self.saveBtn.pack_forget()
+                self.editBtn.pack(**self.actionPack)
+            
+            emp = self.app.currentUser
+            emp.set_first_name(self.fName.get())
+            emp.set_last_name(self.lName.get())
+            emp.set_street(self.street.get())
+            emp.set_city(self.city.get())
+            emp.set_state(self.state.get())
+            emp.set_zip(self.zip.get())
+            emp.set_title(self.title.get())
+
+
+    def validateForm(self):
+        return True
+
+    def setBindings(self, controller):
+        # self.fName.focus()
+        pass
+
+
+class searchFrame(ttk.Frame):
+    def __init__(self, parent, controller):
+        ttk.Frame.__init__(self, parent)
+        self.app = controller
+
+        style_tree = ttk.Style()
+        # style_tree.map("t_style.Treeview", background=[("selected", "green")])
+        style_tree.configure("t_style.Treeview", rowheight=25)
+        # style_tree.configure("t_style.Treeview.Heading", font=('calibri', 16))
     
-        label1 = tk.Label(self, text="First Name")
-        label1.pack()
+        #create a search bar
+        search_frame = tk.Frame(self)
+        search_frame.pack(fill=X)
+        searchLbl = ttk.Label(search_frame, text="Search", font=("Arial", 8), foreground=self.app.color3)
+        searchLbl.pack(anchor=W, padx= 10, pady=(5,0))
+        self.searchBar = ttk.Entry(search_frame)
+        self.searchBar.pack(pady=(0,5), padx=(10,5), side='left', expand=1, fill=X)
+        self.searchBar.bind("<KeyRelease>", self.loadSearchData)
 
-        entry1 = tk.Entry(self)
-        entry1.pack()
+        # Search Filter Dropdown
+        self.clicked = tk.StringVar()
+        self.filterDrop = ttk.Combobox(search_frame, textvariable=self.clicked)
+        self.filterDrop.pack(pady=(0,5), padx=(5,10), side='left', fill=X)
+        self.filterDrop.state(['readonly'])
 
-        label2 = tk.Label(self, text="Last Name")
-        label2.pack()
+        table_frame = tk.Frame(self)
+        table_frame.pack(expand=1, fill=BOTH)
 
-        entry2 = tk.Entry(self)
-        entry2.pack()
+        self.tree = ttk.Treeview(table_frame, style="t_style.Treeview")
+        self.tree.bind("<Double-1>", self.showEmpData)
+        # self.tree.bind("<<TreeviewSelect>>", self.showEmpData)
+        self.tree.place(relheight=1, relwidth=.96, x=10)
 
-        label3 = tk.Label(self, text="Address")
-        label3.pack()
-
-        entry3 = tk.Entry(self)
-        entry3.pack()
-
-        label4 = tk.Label(self, text="City")
-        label4.pack()
-
-        entry4 = tk.Entry(self)
-        entry4.pack()
-
-        label5 = tk.Label(self, text="State")
-        label5.pack()
-
-        entry5 = tk.Entry(self)
-        entry5.pack()
-
-        label6 = tk.Label(self, text="Zipcode")
-        label6.pack()
-
-        entry6 = tk.Entry(self)
-        entry6.pack()
-
-        #option menu for classification(salaried, hourly, commisioned)
-        label7 = tk.Label(self, text="Classification")
-        label7.pack()
-
-        entry7 = tk.Entry(self)
-        entry7.pack()
-
-        button1 = ttk.Button(self, text="Add Employee", command=lambda: controller.show_frame(AdminPage))
-        button1.pack()
-
-        button2 = ttk.Button(self, text="Back", command=lambda: controller.show_frame(AdminPage))
-        button2.pack()
+        scrollY = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollY.set)
+        scrollY.pack(side="right", fill="y")
 
 
+    def initializeTable(self):
+        # print(self.app.currentPage)
+        if self.app.perms == USER_TYPE_ADMIN:
+            self.columnHeaders = ["First Name", "Last Name", "ID", "Active", "Office Email", "Office Phone", "Title", "Department"]
+        else:
+            self.columnHeaders = ["First Name", "Last Name", "ID", "Active", "Office Email", "Office Phone"]
 
+        self.clicked.set(str(self.columnHeaders[0]))
+        self.filterDrop['values'] = self.columnHeaders
+
+        self.tree["column"] = self.columnHeaders
+        self.tree["show"] = "headings"
+
+        # Set column headers
+        for column in self.tree["columns"]:
+            self.tree.heading(column, text=column)
+            if column == 'ID' or column == 'Active':
+                # Hide ID column
+                self.tree.column(column, minwidth=0, width=0, stretch=NO)
+            elif column == "Office Email":
+                self.tree.column(column, minwidth=50, width=150, stretch=YES)
+            else:
+                self.tree.column(column, minwidth=50, width=100, stretch=YES)
+
+    def loadSearchData(self, event=None):
+        # Clear Data
+        empList = sorted(payroll.get_employee_list(self.app.perms == USER_TYPE_ADMIN), key=itemgetter(0))
+        self.tree.delete(*self.tree.get_children())
+
+        searchLen = len(self.searchBar.get())
+
+        self.tree.tag_configure('odd_row', background=self.app.color1)
+        self.tree.tag_configure('even_row', background=self.app.color2)
+        self.tree.tag_configure('inactive', foreground='red')
+        if searchLen == 0:
+            self.insertRows(empList)
+        else:
+            s_key = self.columnHeaders.index(str(self.clicked.get()))
+            s_list = []
+            for row in empList:
+                val = row[s_key]
+                if self.searchBar.get().lower() == val[0:searchLen].lower():
+                    s_list.append(row)
+            s_list = sorted(s_list, key=itemgetter(s_key))
+            self.insertRows(s_list)
+        
+    def insertRows(self, rows):
+        count = 0
+        for row in rows:
+            if row[3]:
+                status = "active"
+            else:
+                status = "inactive"
+            if count % 2 == 0:
+                self.tree.insert("", "end", values=row, tags=("even_row", status))
+            else:
+                self.tree.insert("", "end", values=row, tags=("odd_row", status))
+            count += 1
+
+    def showEmpData(self, event):
+        #TODO: Restructure this
+        self.empWindow = Toplevel(self)
+        self.empWindow.title("Employee Information")
+        self.empWindow.geometry("300x350")
+        curItem = self.tree.focus()
+        rowValues = self.tree.item(curItem)['values']
+        fName = rowValues[0]
+        lName = rowValues[1]
+        empID = rowValues[2]
+        self.empName = Label(self.empWindow, text =f"{fName} {lName}", font=MEDIUM_FONT)
+        self.empName.pack()
+
+        selectedEmp = payroll.find_employee_by_id(empID)
+
+            
+        #TODO: Don't actually show this information. Just for testing.
+        ttk.Label(self.empWindow, text="Title", font=("Arial", 8), foreground=self.app.color3).pack(anchor=W, padx=10, pady=(5,0))
+        self.title = ttk.Entry(self.empWindow)
+        self.title.pack(pady=(0,5), padx=(10,5), expand=1, fill=X)
+        ttk.Label(self.empWindow, text="Department", font=("Arial", 8), foreground=self.app.color3).pack(anchor=W, padx=10, pady=(5,0))
+        self.dept = ttk.Entry(self.empWindow)
+        self.dept.pack(pady=(0,5), padx=(10,5), expand=1, fill=X)
+        ttk.Label(self.empWindow, text="Office Email", font=("Arial", 8), foreground=self.app.color3).pack(anchor=W, padx=10, pady=(5,0))
+        self.email = ttk.Entry(self.empWindow)
+        self.email.pack(pady=(0,5), padx=(10,5), expand=1, fill=X)
+        ttk.Label(self.empWindow, text="Office Phone", font=("Arial", 8), foreground=self.app.color3).pack(anchor=W, padx=10, pady=(5,0))
+        self.phone = ttk.Entry(self.empWindow)
+        self.phone.pack(pady=(0,5), padx=(10,5), expand=1, fill=X)
+
+        self.personalInfo = [
+            self.title,
+            self.dept,
+            self.email,
+            self.phone,
+        ]
+
+        setEntry(self.title, selectedEmp.get_title())
+        setEntry(self.dept, selectedEmp.get_dept())
+        setEntry(self.email, selectedEmp.get_office_email())
+        setEntry(self.phone, selectedEmp.get_office_phone())
+
+        for item in self.personalInfo:
+            item.config(state=DISABLED) # or 'readonly'?
+
+        if self.app.currentPage == AdminPage:
+            editBtn = ttk.Button(self.empWindow, text="Edit", width=BTN_WIDTH, style="Accent.TButton", command=lambda: self.editEmployee(selectedEmp))
+            editBtn.pack(pady = 10, padx=10, side=LEFT)
+            status = selectedEmp.get_status()
+            if status == 0:
+                self.empName.config(foreground='red')
+                self.statusBtn = ttk.Button(self.empWindow, text="Activate", width=BTN_WIDTH, command=lambda: self.toggleStatus(selectedEmp))
+            elif status == 1:
+                self.empName.config(foreground='black')
+                self.statusBtn = ttk.Button(self.empWindow, text="Deactivate", width=BTN_WIDTH, command=lambda: self.toggleStatus(selectedEmp))
+
+            self.statusBtn.pack(pady = 10, padx=10, side=RIGHT)
+    
+    def editEmployee(self, emp):
+        self.master.master.editEmployee(emp)
+        self.empWindow.destroy()
+
+    def toggleStatus(self, emp):
+        status = not emp.get_status()
+        emp.set_status(status)
+        if status:
+            self.empName.config(foreground='black')
+            self.statusBtn.config(text="Deactivate")
+        else:
+            self.empName.config(foreground='red')
+            self.statusBtn.config(text="Activate")
+        self.loadSearchData()
+
+def setEntry(entry, text):
+    entry.delete(0,END)
+    entry.insert(0,text)
 
 #making a list from logins.csv
 with open('logins.csv', 'r') as f:
@@ -345,6 +890,47 @@ with open('logins.csv', 'r') as f:
     #make a list of lists
     logins = [line.strip().split(',') for line in f]
 
-#open app
-app = PayrollApp()
-app.mainloop()
+
+def main():
+    # Load employee payroll data from CSV
+    payroll.load_employees()
+    payroll.process_timecards()
+    payroll.process_receipts()
+    payroll.run_payroll()
+
+    #open app
+    app = PayrollApp()
+    sv_ttk.set_theme('light')
+    app.mainloop()
+
+    # # Save copy of payroll file; delete old file
+    # shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
+    # if os.path.exists(PAY_LOGFILE):
+    #     os.remove(PAY_LOGFILE)
+
+    # # Change Issie Scholard to Salaried by changing the Employee object:
+    # payroll = find_employee_by_id('51-4678119')
+    # payroll.make_salaried(134386.51)
+    # payroll.issue_payment()
+
+    # # Change Reynard,Lorenzin to Commissioned; add some receipts
+    # payroll = find_employee_by_id('11-0469486')
+    # payroll.make_commissioned(50005.50, 27)
+    # clas = payroll.classification
+    # clas.add_receipt(1109.73)
+    # clas.add_receipt(746.10)
+    # payroll.issue_payment()
+
+    # # Change Jed Netti to Hourly; add some hour entries
+    # payroll = find_employee_by_id('68-9609244')
+    # payroll.make_hourly(47)
+    # clas = payroll.classification
+    # clas.add_timecard(8.0)
+    # clas.add_timecard(8.0)
+    # clas.add_timecard(8.0)
+    # clas.add_timecard(8.0)
+    # clas.add_timecard(8.0)
+    # payroll.issue_payment()
+
+if __name__ == '__main__':
+    main()

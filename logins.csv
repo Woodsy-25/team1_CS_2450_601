@@ -1,2 +1,3 @@
-username,password
-admin,admin
+username,password,id,perms
+admin,admin,01,2
+user,user,51-4678119,1

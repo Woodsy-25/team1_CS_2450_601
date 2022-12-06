@@ -1,7 +1,10 @@
-import os, os.path, shutil
+import os, os.path, shutil, uuid
 
 EMPLOYEES = []
 PAY_LOGFILE = 'paylog.txt'
+EMPLOYEES_FILE = 'employees_with_info.csv'
+
+#TODO add more info to receipt and timecard files
 
 def load_employees():
     """
@@ -10,14 +13,14 @@ def load_employees():
     Adds the Employee object to a global list of EMPLOYEES.
     """
 
-    with open('EMPLOYEES.csv', 'r', encoding="utf-8") as in_file:
+    with open(EMPLOYEES_FILE, 'r', encoding="utf-8") as in_file:
         next(in_file) # skip header
 
         for line in in_file:
             line = line.strip().split(',')
 
-            # set emp_id, first_name, last_name, address, city, state, zipcode
-            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], None)
+            # set emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, active)
+            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20], line[21])
 
             class_id = int(line[7]) # salary = 1, commisioned = 2, hourly = 3
             salary = float(line[8])
@@ -34,13 +37,34 @@ def load_employees():
 
             EMPLOYEES.append(emp)
 
-def add_employee(emp_id, first_name, last_name, address, city, state, zipcode):
+def get_employee_list(admin = False):
+    empList = []
+    for emp in EMPLOYEES:
+        if admin:
+            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.office_email, emp.office_phone, emp.title, emp.dept])
+        # If not admin, only show active employees
+        elif emp.active == 1:
+            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.office_email, emp.office_phone, emp.title, emp.dept])
+
+    return empList
+        
+def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
     """
     Adds a new employee to the EMPLOYEES list.
     """
-    emp = Employee(emp_id, first_name, last_name, address, city, state, zipcode, None)
+    if emp_id == None:
+        emp_id = uuid.uuid4()
+    emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, 1)
     EMPLOYEES.append(emp)
 
+def edit_employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
+    """
+    Edits an existing employee in the EMPLOYEES list.
+    """
+    emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
+    EMPLOYEES.append(emp)
+
+'''
 def user_add_employee():
     """
     Prompts the user for employee information and adds the employee to the EMPLOYEES list.
@@ -48,19 +72,19 @@ def user_add_employee():
     emp_id = input('Enter employee ID: ')
     first_name = input('Enter first name: ')
     last_name = input('Enter last name: ')
-    address = input('Enter address: ')
+    street = input('Enter street: ')
     city = input('Enter city: ')
     state = input('Enter state: ')
     zipcode = input('Enter zipcode: ')
-    add_employee(emp_id, first_name, last_name, address, city, state, zipcode)
-
-user_add_employee
+    add_employee(emp_id, first_name, last_name, street, city, state, zipcode)
+'''
 
 def find_employee_by_id(emp_id):
     """Returns the Employee object of a given ID."""
     for emp in EMPLOYEES:
         if emp.emp_id == emp_id:
             return emp
+
 
 def process_timecards():
     """
@@ -104,17 +128,131 @@ def run_payroll():
     for emp in EMPLOYEES:               # EMPLOYEES is the global list of Employee objects
         emp.issue_payment()             # issue_payment calls a method in the classification
                                         # object to compute the pay
+                        
+
 
 class Employee:
-    def __init__(self, emp_id, first_name, last_name, address, city, state, zipcode, classification):
+    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone, active):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name
-        self.address = address
+        self.street = street
         self.city = city
         self.state = state
-        self.zipcode = zipcode
+        self.zip = zip
         self.classification = classification
+        self.salary = salary
+        self.commission = commission
+        self.hourly = hourly
+        self.dob = dob
+        self.ssn = ssn
+        self.start_date = start_date
+        self.account = account
+        self.routing_num = routing_num
+        self.permissions = permissions
+        self.title = title
+        self.dept = dept
+        self.office_email = office_email
+        self.office_phone = office_phone
+        self.active = int(active)
+
+
+    def get_id(self):
+        return self.emp_id
+    def get_first_name(self):
+        return self.first_name
+    def get_last_name(self):
+        return self.last_name
+    def get_street(self):
+        return self.street
+    def get_city(self):
+        return self.city
+    def get_state(self):
+        return self.state
+    def get_zip(self):
+        return self.zip
+    def get_class(self):
+        return (str(self.classification))
+    def get_classification(self):
+        return self.classification
+    def get_salary(self):
+        return self.salary
+    def get_commission(self):
+        return self.commission
+    def get_hourly(self):
+        return self.hourly
+    def get_dob(self):
+        return self.dob
+    def get_ssn(self):
+        return self.ssn
+    def get_start_date(self):
+        return self.start_date
+    def get_account(self):
+        return self.account
+    def get_routing_num(self):
+        return self.routing_num
+    def get_permissions(self):
+        return self.permissions
+    def get_title(self):
+        return self.title
+    def get_dept(self):
+        return self.dept
+    def get_office_email(self):
+        return self.office_email
+    def get_office_phone(self):
+        return self.office_phone
+    def get_status(self):
+        return self.active
+
+
+    def set_id(self, emp_id):
+        self.emp_id = emp_id
+    def set_first_name(self, first_name):
+        self.first_name = first_name
+    def set_last_name(self, last_name):
+        self.last_name = last_name
+    def set_street(self, street):
+        self.street = street
+    def set_city(self, city):
+        self.city = city
+    def set_state(self, state):
+        self.state = state
+    def set_zip(self, zip):
+        self.zip = zip
+    def set_class(self, classification):
+        self.classification = classification
+    def set_classification(self, classification):
+        self.classification = classification
+    def set_salary(self, salary):
+        self.salary = salary
+    def set_commission(self, commission):
+        self.commission = commission
+    def set_hourly(self, hourly):
+        self.hourly = hourly
+    def set_dob(self, dob):
+        self.dob = dob
+    def set_ssn(self, ssn):
+        self.ssn = ssn
+    def set_start_date(self, start_date):
+        self.start_date = start_date
+    def set_account(self, account):
+        self.account = account
+    def set_routing_num(self, routing_num):
+        self.routing_num = routing_num
+    def set_permissions(self, permissions):
+        self.permissions = permissions
+    def set_title(self, title):
+        self.title = title
+    def set_dept(self, dept):
+        self.dept = dept
+    def set_office_email(self, office_email):
+        self.office_email = office_email
+    def set_office_phone(self, office_phone):
+        self.office_phone = office_phone
+    def set_status(self, status):
+        self.active = int(status) 
+
+
 
     def make_salaried(self, salary):
         """Changes employee classification to 'salaried' with the given salary."""
@@ -133,7 +271,7 @@ class Employee:
         """Appends employee payment information to paylog.txt"""
         pay = self.classification.compute_pay()
         message = f'Mailing {pay:0.2f} to {self.first_name} {self.last_name} at '\
-        f'{self.address} {self.city} {self.state} {self.zipcode}\n'
+        f'{self.street} {self.city} {self.state} {self.zip}\n'
 
         with open('paylog.txt', 'a', encoding="utf-8") as out_file:
             out_file.write(message)
@@ -196,7 +334,7 @@ def main():
     shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
     if os.path.exists(PAY_LOGFILE):
         os.remove(PAY_LOGFILE)
-
+'''
     # Change Issie Scholard to Salaried by changing the Employee object:
     emp = find_employee_by_id('51-4678119')
     emp.make_salaried(134386.51)
@@ -220,6 +358,7 @@ def main():
     clas.add_timecard(8.0)
     clas.add_timecard(8.0)
     emp.issue_payment()
+'''
 
 if __name__ == '__main__':
     main()

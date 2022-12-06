@@ -31,4 +31,3 @@ Current features
     commission
         compute the pay
         add sales receipts
-
