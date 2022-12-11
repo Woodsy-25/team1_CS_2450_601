@@ -91,6 +91,13 @@ def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, cl
     emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, 1)
     EMPLOYEES.append(emp)
 
+def edit_employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
+    """
+    Edits an existing employee in the EMPLOYEES list.
+    """
+    emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone)
+    EMPLOYEES.append(emp)
+
 def write_csv(file_name, inactive):
     fields = ["id","first_name","last_name","address","city","state","zip","classification","salary","commission","hourly","dob","ssn","start_date","account","routing_num","permissions","title","dept","office_email","office_phone","active"]
     rows = get_employee_rows(inactive)
@@ -99,6 +106,7 @@ def write_csv(file_name, inactive):
         csvWriter = csv.writer(csvFile)
         csvWriter.writerow(fields)
         csvWriter.writerows(rows)
+
 '''
 def user_add_employee():
     """
@@ -163,6 +171,8 @@ def run_payroll():
     for emp in EMPLOYEES:               # EMPLOYEES is the global list of Employee objects
         emp.issue_payment()             # issue_payment calls a method in the classification
                                         # object to compute the pay
+                        
+
 
 class Employee:
     def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone, active):
@@ -236,7 +246,6 @@ class Employee:
         return self.office_phone
     def get_status(self):
         return self.active
-
 
 
     def set_id(self, emp_id):
@@ -376,9 +385,6 @@ def main():
     process_timecards()
     process_receipts()
     run_payroll()
-
-    for i in EMPLOYEES:
-        print(i.first_name)
 
     # Save copy of payroll file; delete old file
     shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')

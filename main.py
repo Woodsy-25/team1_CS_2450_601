@@ -12,12 +12,15 @@ import tkinter as tk
 from tktooltip import ToolTip
 import sv_ttk
 import re
+import subprocess
 
 EMAIL_REGEX = "^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$"
 PHONE_REGEX = "^\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}$"
 ZIP_REGEX = "^[0-9]{5}(?:-[0-9]{4})?$"
 DATE_REGEX = "^[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{4}$"
 NUMBER_REGEX = "^(?:-(?:[1-9](?:\\d{0,2}(?:,\\d{3})+|\\d*))|(?:0|(?:[1-9](?:\\d{0,2}(?:,\\d{3})+|\\d*))))(?:.\\d+|)$"
+
+subprocess.Popen('pip install -r requirements.txt', shell=True)
 
 #the payroll code
 LARGE_FONT = ('Verdana', 20) # specify font and size
@@ -812,6 +815,7 @@ class EmployeePage(Page):
             self.emp.set_state(self.state.get())
             self.emp.set_zip(self.zip.get())
             self.emp.set_title(self.title.get())
+
 
     def validateForm(self):
         self.requiredFields = [self.fName, self.lName, self.street, self.city, self.state, self.zip]
