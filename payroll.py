@@ -1,4 +1,4 @@
-import os, os.path, shutil, uuid
+import os, os.path, csv, shutil, uuid
 
 EMPLOYEES = []
 PAY_LOGFILE = 'paylog.txt'
@@ -22,7 +22,7 @@ def load_employees():
             # set emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, active)
             emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20], line[21])
 
-            class_id = int(line[7]) # salary = 1, commisioned = 2, hourly = 3
+            class_id = int(line[7]) # salary = 1, Commissioned = 2, hourly = 3
             salary = float(line[8])
             commission_rate = float(line[9])
             hourly_rate = float(line[10])
@@ -37,16 +37,50 @@ def load_employees():
 
             EMPLOYEES.append(emp)
 
-def get_employee_list(admin = False):
+def get_employee_list(inactive = False):
     empList = []
     for emp in EMPLOYEES:
-        if admin:
-            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.office_email, emp.office_phone, emp.title, emp.dept])
+        if inactive:
+            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.title, emp.dept, emp.office_email, emp.office_phone])
         # If not admin, only show active employees
         elif emp.active == 1:
-            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.office_email, emp.office_phone, emp.title, emp.dept])
+            empList.append([emp.first_name, emp.last_name, emp.emp_id, emp.active, emp.title, emp.dept, emp.office_email, emp.office_phone])
 
     return empList
+
+def get_employee_rows(inactive = False):
+    empRow = []
+    for emp in EMPLOYEES:
+        emp_data = [
+            emp.emp_id,
+            emp.first_name,
+            emp.last_name,
+            emp.street,
+            emp.city,
+            emp.state,
+            emp.zip,
+            emp.classification,
+            emp.salary,
+            emp.commission,
+            emp.hourly,
+            emp.dob,
+            emp.ssn,
+            emp.start_date,
+            emp.account,
+            emp.routing_num,
+            emp.permissions,
+            emp.title,
+            emp.dept,
+            emp.office_email,
+            emp.office_phone,
+            emp.active
+        ]
+        if inactive:
+            empRow.append(emp_data)
+        elif emp.active == 1:
+            empRow.append(emp_data)
+
+    return empRow
         
 def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone):
     """
@@ -57,6 +91,14 @@ def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, cl
     emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, 1)
     EMPLOYEES.append(emp)
 
+def write_csv(file_name, inactive):
+    fields = ["id","first_name","last_name","address","city","state","zip","classification","salary","commission","hourly","dob","ssn","start_date","account","routing_num","permissions","title","dept","office_email","office_phone","active"]
+    rows = get_employee_rows(inactive)
+
+    with open(file_name, 'w', newline='') as csvFile:
+        csvWriter = csv.writer(csvFile)
+        csvWriter.writerow(fields)
+        csvWriter.writerows(rows)
 '''
 def user_add_employee():
     """
@@ -163,7 +205,7 @@ class Employee:
     def get_zip(self):
         return self.zip
     def get_class(self):
-        return string(self.classification)
+        return str(self.classification)
     def get_classification(self):
         return self.classification
     def get_salary(self):
@@ -253,7 +295,7 @@ class Employee:
     def make_commissioned(self, salary, commision_rate):
         """Changes employee classification to 'commissioned'
         with the given salary and commission rate."""
-        self.classification = Commisioned(salary, commision_rate)
+        self.classification = Commissioned(salary, commision_rate)
 
     def make_hourly(self, hourly_rate):
         """Changes employee classification to 'hourly' with the given hourly rate."""
@@ -267,6 +309,10 @@ class Employee:
 
         with open('paylog.txt', 'a', encoding="utf-8") as out_file:
             out_file.write(message)
+    
+    def get_payment(self):
+        return self.classification.compute_pay()
+
 
 class Classification:
     def compute_pay(self):
@@ -276,17 +322,23 @@ class Salaried(Classification):
     def __init__(self, salary):
         self.salary = salary
 
+    def __str__(self):
+        return 'Salary'
+
     def compute_pay(self): # override method
         """Returns the employee's salaried pay."""
         pay = self.salary / 24 # 24 pay periods per year
-
         return round(pay, 2)
 
-class Commisioned(Salaried):
+class Commissioned(Salaried):
     def __init__(self, salary, commission_rate):
         super().__init__(salary)
         self.commission_rate = commission_rate / 100
         self._receipts = []
+    
+    def __str__(self):
+        return 'Commission'
+
 
     def compute_pay(self): # override method
         """Returns the employee's salaried pay plus commission."""
@@ -304,6 +356,9 @@ class Hourly(Classification):
     def __init__(self, hourly_rate):
         self.hourly_rate = hourly_rate
         self._timecards = []
+
+    def __str__(self):
+        return 'Hourly'
 
     def compute_pay(self): # override method
         """Returns the employee's hourly pay."""
