@@ -123,16 +123,26 @@ def process_receipts():
                     emp.classification.add_receipt(float(receipt))
 
 def run_payroll():
+    process_receipts()
+    process_timecards()
     if os.path.exists(PAY_LOGFILE): # pay_log_file is a global variable holding ‘paylog.txt’
         os.remove(PAY_LOGFILE)
     for emp in EMPLOYEES:               # EMPLOYEES is the global list of Employee objects
         emp.issue_payment()             # issue_payment calls a method in the classification
                                         # object to compute the pay
+
+def export_payroll():
+    run_payroll()
+
+        # Save copy of payroll file; delete old file
+    shutil.copyfile(PAY_LOGFILE, 'paylog_old.csv')
+    if os.path.exists(PAY_LOGFILE):
+        os.remove(PAY_LOGFILE)
                         
 
 
 class Employee:
-    def __init__(self, emp_id, first_name, last_name, street, city, state, zip, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permissions, title, dept, office_email, office_phone, active):
+    def __init__(self, emp_id = 'N/A', first_name = 'N/A', last_name = 'N/A', street = 'N/A', city = 'N/A', state = 'N/A', zip = 'N/A', classification = 'N/A', salary = 'N/A', commission = 'N/A', hourly = 'N/A', dob = 'N/A', ssn = 'N/A', start_date = 'N/A', account = 'N/A', routing_num = 'N/A', permissions = 'N/A', title = 'N/A', dept = 'N/A', office_email = 'N/A', office_phone = 'N/A', active = 'N/A'):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name
@@ -326,14 +336,16 @@ class Hourly(Classification):
 
 def main():
     load_employees()
-    process_timecards()
-    process_receipts()
-    run_payroll()
+    #process_timecards()
+    #process_receipts()
+    #run_payroll()
 
     # Save copy of payroll file; delete old file
-    shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
-    if os.path.exists(PAY_LOGFILE):
-        os.remove(PAY_LOGFILE)
+    #shutil.copyfile(PAY_LOGFILE, 'paylog_old.csv')
+    #if os.path.exists(PAY_LOGFILE):
+        #os.remove(PAY_LOGFILE)
+
+    export_payroll()
 '''
     # Change Issie Scholard to Salaried by changing the Employee object:
     emp = find_employee_by_id('51-4678119')
@@ -359,6 +371,5 @@ def main():
     clas.add_timecard(8.0)
     emp.issue_payment()
 '''
-
 if __name__ == '__main__':
     main()

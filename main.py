@@ -529,7 +529,8 @@ class AdminPage(Page):
         return True
 
     def exportCSV(self):
-        print('EXPORTING')
+        payroll.export_payroll()
+        print('EXPORTING as payroll.csv')
 
     def setBindings(self, controller):
         self.fName.focus()
@@ -902,35 +903,13 @@ def main():
     app = PayrollApp()
     sv_ttk.set_theme('light')
     app.mainloop()
+    #after app is closed, update the csv files with the EMPLOYEE list
+    with open('employees.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['first_name', 'last_name', 'id', 'status', 'title', 'dept', 'office_email', 'office_phone', 'pay_rate', 'pay_type', 'pay_method', 'pay_account', 'pay_address'])
+        for emp in payroll.EMPLOYEES:
+            writer.writerow(emp.get_data())
 
-    # # Save copy of payroll file; delete old file
-    # shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
-    # if os.path.exists(PAY_LOGFILE):
-    #     os.remove(PAY_LOGFILE)
-
-    # # Change Issie Scholard to Salaried by changing the Employee object:
-    # payroll = find_employee_by_id('51-4678119')
-    # payroll.make_salaried(134386.51)
-    # payroll.issue_payment()
-
-    # # Change Reynard,Lorenzin to Commissioned; add some receipts
-    # payroll = find_employee_by_id('11-0469486')
-    # payroll.make_commissioned(50005.50, 27)
-    # clas = payroll.classification
-    # clas.add_receipt(1109.73)
-    # clas.add_receipt(746.10)
-    # payroll.issue_payment()
-
-    # # Change Jed Netti to Hourly; add some hour entries
-    # payroll = find_employee_by_id('68-9609244')
-    # payroll.make_hourly(47)
-    # clas = payroll.classification
-    # clas.add_timecard(8.0)
-    # clas.add_timecard(8.0)
-    # clas.add_timecard(8.0)
-    # clas.add_timecard(8.0)
-    # clas.add_timecard(8.0)
-    # payroll.issue_payment()
 
 if __name__ == '__main__':
     main()
