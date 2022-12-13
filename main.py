@@ -13,6 +13,7 @@ from tktooltip import ToolTip
 import sv_ttk
 import re
 import subprocess
+import bcrypt
 
 EMAIL_REGEX = "^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$"
 PHONE_REGEX = "^\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}$"
@@ -228,22 +229,33 @@ class LoginPage(Page):
         controller.bind("<Return>", self.login)
 
     def login(self, *args):
-        for login in logins:
-            if self.userName.get() == login[0] and self.password.get() == login[1]:
-                employeeID = login[2]
-                self.app.currentUser = payroll.find_employee_by_id(employeeID)
-                if login[3] == USER_TYPE_EMPLOYEE:
-                    self.app.perms = USER_TYPE_EMPLOYEE
-                    self.app.init_frame(EmployeePage)
-                    self.app.show_frame(EmployeePage)
-                elif login[3] == USER_TYPE_ADMIN:
-                    self.app.perms = USER_TYPE_ADMIN
-                    self.app.init_frame(AdminPage)
-                    self.app.show_frame(AdminPage)
-                self.userName.delete(0,END)
-                self.password.delete(0,END)
-                return
-        messagebox.showerror("Error", "Invalid username or password")
+        name = self.userName.get()
+        pw = self.password.get()
+        with open('encrypted.csv', 'r') as incsv:
+            pass_list = []
+            read_csv = csv.reader(incsv)
+            for read in read_csv:
+                pass_list.append(read)
+
+            pw_b = pw.encode('utf-8')
+            for user in pass_list:
+                if user[0] == name:
+                    pch = user[1].encode()
+                    if bcrypt.checkpw(pw_b, pch): 
+                        employeeID = user[2]
+                        self.app.currentUser = payroll.find_employee_by_id(employeeID)
+                        if user[3] == USER_TYPE_EMPLOYEE:
+                            self.app.perms = USER_TYPE_EMPLOYEE
+                            self.app.init_frame(EmployeePage)
+                            self.app.show_frame(EmployeePage)
+                        elif user[3] == USER_TYPE_ADMIN:
+                            self.app.perms = USER_TYPE_ADMIN
+                            self.app.init_frame(AdminPage)
+                            self.app.show_frame(AdminPage)                            
+                        self.userName.delete(0,END)
+                        self.password.delete(0,END)
+                        return
+            messagebox.showerror("Error", "Invalid username or password")
 
 '''
 -----------------ADMIN PAGE-----------------
@@ -418,7 +430,6 @@ class AdminPage(Page):
             hourly = amount
         if self.validateForm():
             payroll.add_employee(None, self.fName.get(), self.lName.get(), self.street.get(), self.city.get(), self.state.get(), self.zip.get(), self.classification.get(), salary, commission, hourly, self.dob.get(), None, self.startDate.get(), None, None, self.perms.get(), self.title.get(), self.dept.get(), self.email.get(), self.phone.get())
-
             messagebox.showinfo(message='Employee Added Successfully')
 
     def editEmployee(self, emp):
@@ -1032,30 +1043,16 @@ def setEntry(entry, text):
     entry.delete(0,END)
     entry.insert(0,text)
 
-#making a list from logins.csv
-with open('logins.csv', 'r') as f:
-    #skip the first line
-    next(f)
-    #make a list of lists
-    logins = [line.strip().split(',') for line in f]
-
-
 def main():
     # Load employee payroll data from CSV
     payroll.load_employees()
     payroll.process_timecards()
     payroll.process_receipts()
-    # payroll.run_payroll()
 
     #open app
     app = PayrollApp()
     sv_ttk.set_theme('light')
     app.mainloop()
-
-    # # Save copy of payroll file; delete old file
-    # shutil.copyfile(PAY_LOGFILE, 'paylog_old.txt')
-    # if os.path.exists(PAY_LOGFILE):
-    #     os.remove(PAY_LOGFILE)
 
 if __name__ == '__main__':
     main()
