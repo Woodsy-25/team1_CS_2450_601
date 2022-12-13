@@ -18,24 +18,24 @@ def load_employees():
 
         for line in in_file:
             line = line.strip().split(',')
+            if len(line) == 22:
+                # set emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, active)
+                emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20], line[21])
 
-            # set emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, active)
-            emp = Employee(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7], line[8], line[9], line[10], line[11], line[12], line[13], line[14], line[15], line[16], line[17], line[18], line[19], line[20], line[21])
+                class_id = int(line[7]) # salary = 1, Commissioned = 2, hourly = 3
+                salary = float(line[8])
+                commission_rate = float(line[9])
+                hourly_rate = float(line[10])
 
-            class_id = int(line[7]) # salary = 1, Commissioned = 2, hourly = 3
-            salary = float(line[8])
-            commission_rate = float(line[9])
-            hourly_rate = float(line[10])
+                # set classification
+                if class_id == 1:
+                    emp.make_salaried(salary)
+                elif class_id == 2:
+                    emp.make_commissioned(salary, commission_rate)
+                elif class_id == 3:
+                    emp.make_hourly(hourly_rate)
 
-            # set classification
-            if class_id == 1:
-                emp.make_salaried(salary)
-            elif class_id == 2:
-                emp.make_commissioned(salary, commission_rate)
-            elif class_id == 3:
-                emp.make_hourly(hourly_rate)
-
-            EMPLOYEES.append(emp)
+                EMPLOYEES.append(emp)
 
 def get_employee_list(inactive = False):
     empList = []
@@ -64,7 +64,7 @@ def get_employee_rows(inactive = False):
             emp.commission,
             emp.hourly,
             emp.dob,
-            emp.ssn,
+            "", # Don't export SSN
             emp.start_date,
             emp.account,
             emp.routing_num,
@@ -87,7 +87,7 @@ def add_employee(emp_id, first_name, last_name, street, city, state, zipcode, cl
     Adds a new employee to the EMPLOYEES list.
     """
     if emp_id == None:
-        emp_id = uuid.uuid4()
+        emp_id = uuid.uuid4().hex
     emp = Employee(emp_id, first_name, last_name, street, city, state, zipcode, classification, salary, commission, hourly, dob, ssn, start_date, account, routing_num, permission, title, dept, office_email, office_phone, 1)
     EMPLOYEES.append(emp)
 
@@ -106,6 +106,7 @@ def write_csv(file_name, inactive):
         csvWriter = csv.writer(csvFile)
         csvWriter.writerow(fields)
         csvWriter.writerows(rows)
+    return True
 
 '''
 def user_add_employee():
@@ -127,6 +128,7 @@ def find_employee_by_id(emp_id):
     for emp in EMPLOYEES:
         if emp.emp_id == emp_id:
             return emp
+    return False
 
 
 def process_timecards():
@@ -140,12 +142,12 @@ def process_timecards():
             line = line.strip().split(',')
             emp_id = line[0]
             emp = find_employee_by_id(emp_id)
+            if emp and emp.classification == 'Hourly':
+                if len(line) > 1: # if the employee has timecard data
+                    timecards = line[1:]
 
-            if len(line) > 1: # if the employee has timecard data
-                timecards = line[1:]
-
-                for timecard in timecards:
-                    emp.classification.add_timecard(float(timecard))
+                    for timecard in timecards:
+                        emp.classification.add_timecard(float(timecard))
 
 def process_receipts():
     """
@@ -158,12 +160,12 @@ def process_receipts():
             line = line.strip().split(',')
             emp_id = line[0]
             emp = find_employee_by_id(emp_id)
+            if emp:
+                if len(line) > 1: # if the employee has receipt data
+                    receipts = line[1:]
 
-            if len(line) > 1: # if the employee has receipt data
-                receipts = line[1:]
-
-                for receipt in receipts:
-                    emp.classification.add_receipt(float(receipt))
+                    for receipt in receipts:
+                        emp.classification.add_receipt(float(receipt))
 
 def run_payroll():
     process_receipts()
@@ -174,11 +176,11 @@ def run_payroll():
         emp.issue_payment()             # issue_payment calls a method in the classification
                                         # object to compute the pay
 
-def export_payroll():
+def export_payroll(filename):
     run_payroll()
 
-        # Save copy of payroll file; delete old file
-    shutil.copyfile(PAY_LOGFILE, 'paylog_old.csv')
+    # Save copy of payroll file; delete old file
+    shutil.copyfile(PAY_LOGFILE, filename)
     if os.path.exists(PAY_LOGFILE):
         os.remove(PAY_LOGFILE)
                         
@@ -245,7 +247,7 @@ class Employee:
     def get_routing_num(self):
         return self.routing_num
     def get_permissions(self):
-        return self.permissions
+        return int(self.permissions)
     def get_title(self):
         return self.title
     def get_dept(self):
@@ -406,7 +408,7 @@ def main():
     #if os.path.exists(PAY_LOGFILE):
         #os.remove(PAY_LOGFILE)
 
-    export_payroll()
+    # export_payroll()
 '''
     # Change Issie Scholard to Salaried by changing the Employee object:
     emp = find_employee_by_id('51-4678119')
