@@ -610,6 +610,8 @@ class AdminPage(Page):
             self.amountLbl.config(text="Amount")
 
     def exportCSV(self):
+        payroll.export_payroll()
+        print('EXPORTING as payroll.csv')
         inactive = messagebox.askyesno('Exporting Active Employees', 'Would you like to export inactive employees as well?')
         initialName = 'export_all' if inactive else 'export_active_only'
         filename = filedialog.asksaveasfilename(initialfile=initialName, filetypes=[("CSV File", ".csv")], defaultextension=".csv")
@@ -1053,6 +1055,27 @@ def main():
     app = PayrollApp()
     sv_ttk.set_theme('light')
     app.mainloop()
+    #after app is closed, update the csv files with the EMPLOYEE list
+    with open('employees.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        #todo: make this a function - emp has no get_data() method
+        #skip the first line
+        writer.writerow(['id','first_name','last_name','address','city','state','zip','classification','salary','commission','hourly','dob','ssn','start_date','account','routing_num','permissions','title','dept','office_email','office_phone','active'])
+        for emp in payroll.EMPLOYEES:
+            #write each employee to the csv file
+            #change their classification back to an int
+            #if the classification is set to salary, commission, or hourly, then set it to 0, 1, or 2 respectively
+            emp_data = []
+            for item in emp.get_data():
+                if item == 'Salary':
+                    emp_data.append(1)
+                elif item == 'Commission':
+                    emp_data.append(2)
+                elif item == 'Hourly':
+                    emp_data.append(3)
+                else:
+                    emp_data.append(item)
+            writer.writerow(emp_data)
 
 if __name__ == '__main__':
     main()
