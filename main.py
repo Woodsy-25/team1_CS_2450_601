@@ -26,10 +26,11 @@ subprocess.Popen('pip install -r requirements.txt', shell=True)
 #the payroll code
 LARGE_FONT = ('Verdana', 20) # specify font and size
 MEDIUM_FONT = ('Verdana', 15)
+SMALL_FONT = ('Verdana', 10)
 HINT_FONT = ("Ariel", "8", "italic")
 
-USER_TYPE_EMPLOYEE = '1'
-USER_TYPE_ADMIN = '2'
+USER_TYPE_EMPLOYEE = 1
+USER_TYPE_ADMIN = 2
 BTN_WIDTH = 12
 
 class PayrollApp(tk.Tk):
@@ -68,7 +69,7 @@ class PayrollApp(tk.Tk):
         self.currentPage = page
         self.clear_frames()
         frame = self.frames[page]
-        frame.pack(side="top", fill=BOTH, expand=True)
+        frame.pack(side="top", fill="both", expand=True)
         frame.pack_elements()
         frame.setBindings(self)
 
@@ -99,16 +100,10 @@ class PayrollApp(tk.Tk):
 class Page(ttk.Frame):
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self, parent)
-        self.parentPage = StartingPage
         self.show_toolbar = False
         self.entries = {}
         self.bottomButtons = []
-        self.app = controller
-
-        # Configs only work for tk. Use themes for ttk.
-        # self.invalidEntryConfig = {'width':200}
-        self.entryConfig = {'width': 50}
-        
+        self.app = controller        
 
         self.labelPack = {'anchor' : W, 'padx' : 200}
         self.entryPack = {'pady' : (0,5), 'padx' : 200, 'fill' : X}
@@ -146,12 +141,11 @@ class Page(ttk.Frame):
         self.labelConfig = {'font':("Arial", 8), 'foreground': self.app.color3}
         self.pageTitle.pack(pady=10, padx=10)
 
-        for label, entry in self.entries.items():
+        for entry, label in self.entries.items():
             label.pack(**self.labelPack)
             if entry != None:
                 entry.pack(**self.entryPack)
                 label.config(**self.labelConfig)
-
 
         for button in self.bottomButtons:
             button.pack(**self.buttonPack)
@@ -189,16 +183,77 @@ class StartingPage(Page):
 class HelpPage(Page):
     def __init__(self, parent, controller):
         Page.__init__(self, parent, controller)
-        self.parentPage
         self.pageTitle = ttk.Label(self, text="Help Page", font=LARGE_FONT)
+        self.pageTitle.pack(pady=10, padx=10)
 
-        self.help = ttk.Label(self, text="(Helpful information will be displayed here)", font=MEDIUM_FONT)
-        self.entries = {self.help: None}
+        self.labelPack = {'anchor' : W, 'padx' : 5, 'pady' : 5}
 
-        self.backBtn = ttk.Button(self, text="Back", command=lambda: controller.go_back())
+        self.tabControl = ttk.Notebook(self)
+        #add tabs with
+        self.loginTab = ttk.Frame(self.tabControl)
+        self.adminTab = ttk.Frame(self.tabControl)
+        self.employeeTab = ttk.Frame(self.tabControl)
 
-        self.bottomButtons = [self.backBtn]
+        self.tabControl.add(self.loginTab, text='Login Page')
+        self.tabControl.add(self.adminTab, text='Admin Page')
+        self.tabControl.add(self.employeeTab, text='Employee Page')
+        self.tabControl.pack(expand=1, fill="both")      
 
+        loginSection = ttk.Frame(self.loginTab)
+        loginSection.pack(padx=10, pady=10, ipady=30, side="left", fill="both", expand=1)
+
+        loginHelp = "The Login page has two fields: Username and Password.\nEnter a valid Username and Password and click the \"Login\" button to log into the system."
+        loginHelp += "\n\nFor testing purposes, the default login for Administrator is Username: admin, and Password: admin."
+        loginHelp += "\nThe default login for Employee is Username: user, and Password: user."
+        loginHelp += "\n\nThe back button will take you back to the Starting Page, where you can quit the program or change the theme."
+        
+        ttk.Label(loginSection, text=loginHelp, font=SMALL_FONT).pack(**self.labelPack)
+
+        adminSection = ttk.Frame(self.adminTab)
+        adminSection.pack(padx=10, pady=10, ipady=30, side="top", fill="both", expand=1)
+
+        adminHelp = "The Admin page has two tabs: Add Employee and Search Employees."
+        adminHelp += "\n\nAdd Employee Tab:\n - Admin can add an employee by entering valid data into each required field and clicking the \"Save\" button."
+        adminHelp += "\n - Required fields have a asterisk (*) to the right of them."
+        adminHelp += "\n - Once the employee is added, they will be visible under the Search Employees Tab."
+        adminHelp += "\n\nSearch Employees Tab:\n - Admin can search for any employee, filtering by any of the fields in the dropdown to the right of the search bar."
+        adminHelp += "\n - To select an employee, double click on the specific employee in the list. This will pull up a new window with the\n   employee's infofmation."
+        adminHelp += "\n - From the employee info window, the admin has the option to Edit or Activate/Deactivate the employee."
+        adminHelp += "\n - Clicking the \"Edit\" button will switch the \"Add Employee\" tab to \"Edit Employee\", where the employees information can\n   be updated."
+        adminHelp += "\n - The \"Active Only\" toggle, located in the top right can be toggled to show or hide inactive employees."
+        adminHelp += "\n - Inactive employees are displayed in red."
+        adminHelp += "\n\n - EXPORTING EMPLOYEES: The Export DB button in the bottom left can be clicked to export a CSV of all employees or \n   just active employees."
+        adminHelp += "\n\n - EXPORTING PAYROLL: The Export Payroll button in the bottom left can be clicked to generate and export a Text file \n   of all payroll information including the employee's name, address, and payment amount."
+        adminHelp += "\n\n - When either of the export buttons are clicked, you will be presented with a save dialog where you can choose the \n   location and filename of the exported file."
+        adminHelp += "\n\nThe \"Logout\" button in the bottom right can be clicked at any time to log out of the applicatio."
+        
+        ttk.Label(adminSection, text=adminHelp, font=SMALL_FONT).pack(**self.labelPack)
+
+        empSection = ttk.Frame(self.employeeTab)
+        empSection.pack(padx=10, pady=10, ipady=30, side="top", fill="both", expand=1)
+
+        empHelp = "The Employee page has two tabs: Profile and Directory."
+        empHelp += "\n\nProfile Tab:\n - The user can view their personal information in the left section titled \"Personal Information\"."
+        empHelp += "\n - The user can edit their personal information by clicking the \"Edit\" button in the bottom left"
+        empHelp += "\n - When the user has finished editing their info, they can click \"Save\" to save the changes, or \"Cancel\" to discard them."
+        empHelp += "\n\n - The user can view their payment information in the right \"Pay Stub\" Section."
+        empHelp += "\n\nDirectory Tab:\n - Similar to the Admin's Search Employees tab, the Directory tab displays basic information about each active employee,\n   including name, title, and department."
+        empHelp += "\n - The user can search for any employee, filtering by any of the fields in the dropdown to the right of the search bar."
+        empHelp += "\n- Double clicking on one of the employees in the list will open a new window with more information such as the employee's\n   office email and office phone number."
+        empHelp += "\n\nThe \"Logout\" button in the bottom right can be clicked at any time to log out of the application."
+
+        ttk.Label(empSection, text=empHelp, font=SMALL_FONT).pack(**self.labelPack)
+
+        self.backBtn = ttk.Button(self, text="Back", width=BTN_WIDTH, command=lambda: controller.go_back())
+        self.backBtn.pack(side="right", padx=10, pady=10)
+
+    def pack_elements(self):
+        if self.app.previousPage == LoginPage:
+            self.tabControl.select(self.loginTab)
+        if self.app.previousPage == AdminPage:
+            self.tabControl.select(self.adminTab)
+        if self.app.previousPage == EmployeePage:
+            self.tabControl.select(self.employeeTab)
 
 
 '''
@@ -208,8 +263,6 @@ class HelpPage(Page):
 class LoginPage(Page):
     def __init__(self, parent, controller):
         Page.__init__(self, parent, controller)
-
-        self.parentPage = StartingPage
         self.pageTitle = ttk.Label(self, text="Login", font=LARGE_FONT)
 
         label1 = ttk.Label(self, text="Username")
@@ -221,8 +274,12 @@ class LoginPage(Page):
         self.loginBtn = ttk.Button(self, text="Login", command=lambda: self.login())
         self.backBtn = ttk.Button(self, text="Back", command=lambda: controller.go_back())
 
-        self.entries = {label1: self.userName, label2: self.password}
+        self.entries = { self.userName: label1 , self.password: label2 }
         self.bottomButtons = [self.loginBtn, self.backBtn]
+
+        self.helpBtn = ttk.Button(self, text="?", width=2, command=lambda: controller.show_frame(HelpPage))
+        self.helpBtn.pack(side="bottom", anchor=E, padx=10, pady=10)
+        ToolTip(self.helpBtn, delay=1, msg='Help')
 
     def setBindings(self, controller):
         self.userName.focus()
@@ -244,18 +301,20 @@ class LoginPage(Page):
                     if bcrypt.checkpw(pw_b, pch): 
                         employeeID = user[2]
                         self.app.currentUser = payroll.find_employee_by_id(employeeID)
-                        if user[3] == USER_TYPE_EMPLOYEE:
+                        perms = self.app.currentUser.get_permissions()
+                        if perms == USER_TYPE_EMPLOYEE:
                             self.app.perms = USER_TYPE_EMPLOYEE
                             self.app.init_frame(EmployeePage)
                             self.app.show_frame(EmployeePage)
-                        elif user[3] == USER_TYPE_ADMIN:
+                        elif perms == USER_TYPE_ADMIN:
                             self.app.perms = USER_TYPE_ADMIN
                             self.app.init_frame(AdminPage)
-                            self.app.show_frame(AdminPage)                            
+                            self.app.show_frame(AdminPage)
+
                         self.userName.delete(0,END)
                         self.password.delete(0,END)
                         return
-            messagebox.showerror("Error", "Invalid username or password")
+                    messagebox.showerror("Error", "Invalid username or password")
 
 '''
 -----------------ADMIN PAGE-----------------
@@ -267,14 +326,12 @@ class AdminPage(Page):
 
         self.pageTitle = ttk.Label(self, text="Admin Page", font=LARGE_FONT)
         self.pageTitle.pack(pady=10, padx=10)
-
         self.action = 'NEW'
 
         #add tabs to switch frames
         self.tabControl = ttk.Notebook(self)
         #add tabs with
         self.manageEmpTab = ttk.Frame(self.tabControl)
-        self.editEmpTab = ttk.Frame(self.tabControl)
         self.searchEmpTab = searchFrame(self.tabControl, controller)
 
         #open add employee page
@@ -311,8 +368,11 @@ class AdminPage(Page):
         -----------------SEARCH EMPLOYEES-----------------
         '''
         self.searchEmpTab.initializeTable()
-        self.exportBtn = ttk.Button(self, text="Export CSV", width=BTN_WIDTH, command=lambda: self.exportCSV())
+        self.exportDbBtn = ttk.Button(self, text="Export DB", width=BTN_WIDTH, command=lambda: self.exportDB())
+        ToolTip(self.exportDbBtn, delay=1, msg='Export Employee Data as CSV')
 
+        self.exportPayBtn = ttk.Button(self, text="Export Payroll", width=BTN_WIDTH, command=lambda: self.exportPay())
+        ToolTip(self.exportDbBtn, delay=1, msg='Export Payroll as Text File')
 
     def addColumns(self, parent):
         self.column1 = ttk.Frame(parent)
@@ -369,45 +429,44 @@ class AdminPage(Page):
         self.permSelect.state(['readonly'])
 
         # Classification Dropdown
-        self.classificationLbl = ttk.Label(self.column2, text="Classification")
+        self.classificationLbl = ttk.Label(self.column2, text="Classification*")
         self.classification = StringVar()
         self.classSelect = ttk.Combobox(self.column2, textvariable=self.classification)
         self.classSelect['values'] = ['Salary', 'Commission', 'Hourly']
         self.classSelect.state(['readonly'])
         self.classSelect.bind("<<ComboboxSelected>>", self.classSelected)
 
-        self.amountLbl = ttk.Label(self.column2, text="Amount")
+        self.amountLbl = ttk.Label(self.column2, text="Amount*")
         self.amount = ttk.Entry(self.column2)
 
         # Commission Rate
-        self.rateLbl = ttk.Label(self.column2, text="Commission Rate")
+        self.rateLbl = ttk.Label(self.column2, text="Commission Rate*")
         self.rate = ttk.Entry(self.column2)
 
         self.entries = {
-            self.fNameLbl: self.fName,
-            self.lNameLbl: self.lName,
-            self.streetLbl: self.street,
-            self.cityLbl: self.city,
-            self.stateLbl: self.state,
-            self.zipLbl: self.zip,
-            self.dobLbl: self.dob,
-            self.emailLbl: self.email,
-            self.phoneLbl: self.phone,
-            self.titleLbl: self.title,
-            self.startDateLbl: self.startDate,
-            self.permsLbl: self.permSelect,
-            self.deptLbl: self.deptSelect,
-            self.classificationLbl: self.classSelect,
-            self.amountLbl: self.amount
+            self.fName: self.fNameLbl,
+            self.lName: self.lNameLbl,
+            self.street: self.streetLbl,
+            self.city: self.cityLbl,
+            self.state: self.stateLbl,
+            self.zip: self.zipLbl,
+            self.dob: self.dobLbl,
+            self.email: self.emailLbl,
+            self.phone: self.phoneLbl,
+            self.title: self.titleLbl,
+            self.startDate: self.startDateLbl,
+            self.permSelect: self.permsLbl,
+            self.deptSelect: self.deptLbl,
+            self.classSelect: self.classificationLbl,
+            self.amount: self.amountLbl
         }
-
-
 
     def changeTab(self, *args):
         tab = self.tabControl.index(self.tabControl.select())
         if tab == 0:
             self.hint.config(text="Hint: * Required Fields")
-            self.exportBtn.pack_forget()
+            self.exportDbBtn.pack_forget()
+            self.exportPayBtn.pack_forget()
             self.cancelBtn.pack(**self.actionPack)
             self.saveBtn.pack(**self.actionPack)
         if tab == 1:
@@ -415,7 +474,8 @@ class AdminPage(Page):
             self.searchEmpTab.loadSearchData()
             self.cancelBtn.pack_forget()
             self.saveBtn.pack_forget()
-            self.exportBtn.pack(**self.actionPack)
+            self.exportDbBtn.pack(**self.actionPack)
+            self.exportPayBtn.pack(**self.actionPack)
 
     def addEmployee(self):
         classification = self.classification.get()
@@ -428,9 +488,14 @@ class AdminPage(Page):
             commission = self.rate.get()
         elif classification == 'Hourly':
             hourly = amount
+
+        permissions = self.perms.get()
+        permID = 1 if permissions == 'Employee' else 2
+
         if self.validateForm():
-            payroll.add_employee(None, self.fName.get(), self.lName.get(), self.street.get(), self.city.get(), self.state.get(), self.zip.get(), self.classification.get(), salary, commission, hourly, self.dob.get(), None, self.startDate.get(), None, None, self.perms.get(), self.title.get(), self.dept.get(), self.email.get(), self.phone.get())
+            payroll.add_employee(None, self.fName.get(), self.lName.get(), self.street.get(), self.city.get(), self.state.get(), self.zip.get(), self.classification.get(), salary, commission, hourly, self.dob.get(), None, self.startDate.get(), None, None, permID, self.title.get(), self.dept.get(), self.email.get(), self.phone.get())
             messagebox.showinfo(message='Employee Added Successfully')
+            self.clearEntries()
 
     def editEmployee(self, emp):
         self.action = 'EDIT'
@@ -478,9 +543,9 @@ class AdminPage(Page):
 
         # Set permissions dropdown
         perms = emp.get_permissions()
-        if perms == '1':
+        if perms == 1:
             self.permSelect.current(1)
-        elif perms == '2':
+        elif perms == 2:
             self.permSelect.current(0)
 
         setEntry(self.startDate, emp.get_start_date())
@@ -493,14 +558,17 @@ class AdminPage(Page):
             emp = self.editingEmp
 
             classification = self.classification.get()
-            amount = self.amount.get()
+            amount = float(self.amount.get())
             if classification == 'Salary':
                 emp.make_salaried(amount)
             elif classification == 'Commission':
-                rate = self.rate.get()
+                rate = int(self.rate.get())
                 emp.make_commissioned(amount, rate)
             elif classification == 'Hourly':
                 emp.make_hourly(amount)
+
+            permissions = self.perms.get()
+            permID = 1 if permissions == 'Employee' else 2
 
             emp.set_first_name(self.fName.get())
             emp.set_last_name(self.lName.get())
@@ -514,7 +582,7 @@ class AdminPage(Page):
             emp.set_title(self.title.get())
 
             emp.set_start_date(self.startDate.get())
-            emp.set_permissions(self.perms.get())
+            emp.set_permissions(permID)
             emp.set_dept(self.dept.get())
 
             messagebox.showinfo(message='Employee Updated Successfully')
@@ -523,8 +591,7 @@ class AdminPage(Page):
             ToolTip(self.saveBtn, delay=1, msg='Add Employee')
 
             self.tabControl.select(self.searchEmpTab)
-            for entry in self.entries.values():
-                entry.delete(0,END)
+            self.clearEntries()
 
     def saveEmployee(self, event=None):
         if self.action == 'NEW':
@@ -535,66 +602,96 @@ class AdminPage(Page):
     def cancelEdit(self):
         confirm = messagebox.askyesno('Are you sure?', 'Changes will be lost')
         if confirm:
-            for entry in self.entries.values():
-                entry.delete(0,END)
-
+            self.clearEntries()
             if self.action == 'EDIT':
                 self.action = 'NEW'
                 self.tabControl.tab(self.manageEmpTab, text='Add Employee')
                 self.tabControl.select(self.searchEmpTab)
 
+    def clearEntries(self):
+        for entry, label in self.entries.items():
+            if isinstance(entry, ttk.Combobox):
+                entry.set('')
+            else:
+                entry.delete(0,END)
+            label.config(foreground=self.app.color3)
+            self.rate.delete(0,END)
+            self.rateLbl.pack_forget()
+            self.rate.pack_forget()
+
 
     def validateForm(self):
         # Make sure all required entries are filled and valid
         valid = True
-        self.requiredFields = [self.fName, self.lName, self.street, self.city, self.state, self.zip, self.dob, self.startDate, self.perms, self.dept, self.email, self.phone]
+        self.requiredFields = [self.fName, self.lName, self.street, self.city, self.state, self.zip, self.dob, self.startDate, self.email, self.phone, self.permSelect, self.deptSelect, self.classSelect, self.amount]
+        commission = self.classification.get() == 'Commission'
+            
         for field in self.requiredFields:
             if (len(field.get()) < 1):
-                messagebox.showerror("Invalid", "Please enter all required fields")
-                return False
+                self.entries[field].config(foreground='red')
+                valid = False
+            else:
+                self.entries[field].config(foreground=self.app.color3)
+            
+        if commission and len(self.rate.get()) < 1:
+            self.rateLbl.config(foreground='red')
+            valid = False
+        else:
+            self.rateLbl.config(foreground=self.app.color3)
+
+        if not valid:
+            messagebox.showerror("Invalid", "Please enter all required fields")
+            return False
 
         # Validate Zip Code
         if not re.fullmatch(ZIP_REGEX, self.zip.get()):
-            self.zip.config(foreground='red')
+            self.zipLbl.config(foreground='red')
             messagebox.showerror("Invalid Zip Code", "Make sure it is formatted correctly.\n\n(Ex. 84602)")
             valid = False
         else:
-            self.zip.config(foreground=self.app.color4)
+            self.zipLbl.config(foreground=self.app.color3)
         # Validate DOB
         if not re.fullmatch(DATE_REGEX, self.dob.get()):
-            self.dob.config(foreground='red')
+            self.dobLbl.config(foreground='red')
             messagebox.showerror("Invalid Date of Birth", "Make sure it is formatted correctly.\n\n(Ex. 1/24/2000)")
             valid = False
         else:
-            self.dob.config(foreground=self.app.color4)
+            self.dobLbl.config(foreground=self.app.color3)
         # Validate Email
         if not re.fullmatch(EMAIL_REGEX, self.email.get()):
-            self.email.config(foreground='red')
+            self.emailLbl.config(foreground='red')
             messagebox.showerror("Invalid Email Address", "Make sure it is formatted correctly.\n\n(Ex. john.smith@example.com)")
             valid = False
         else:
-            self.email.config(foreground=self.app.color4)
+            self.emailLbl.config(foreground=self.app.color3)
         # Validate Phone Number
         if not re.fullmatch(PHONE_REGEX, self.phone.get()):
-            self.phone.config(foreground='red')
+            self.phoneLbl.config(foreground='red')
             messagebox.showerror("Invalid Phone Number", "Make sure it is formatted correctly.\n\n(Ex. 888-777-6666 or 8887776666)")
             valid = False
         else:
-            self.phone.config(foreground=self.app.color4)
+            self.phoneLbl.config(foreground=self.app.color3)
         # Validate Start Date
         if not re.fullmatch(DATE_REGEX, self.startDate.get()):
-            self.startDate.config(foreground='red')
+            self.startDateLbl.config(foreground='red')
             messagebox.showerror("Invalid Start Date", "Make sure it is formatted correctly.\n\n(Ex. 1/24/2000)")
             valid = False
         else:
-            self.startDate.config(foreground=self.app.color4) 
+            self.startDateLbl.config(foreground=self.app.color3) 
         # Validate Amount
         if not re.fullmatch(NUMBER_REGEX, self.amount.get()):
-            self.amount.config(foreground='red')
+            self.amountLbl.config(foreground='red')
             messagebox.showerror("Invalid Amount", "Make sure it is formatted correctly.\n\n(Ex. 250.00)")
             valid = False
         else:
-            self.amount.config(foreground=self.app.color4)
+            self.amountLbl.config(foreground=self.app.color3)
+        if commission:
+            if not re.fullmatch(NUMBER_REGEX, self.rate.get()):
+                self.rateLbl.config(foreground='red')
+                messagebox.showerror("Invalid Rate", "Make sure it is formatted correctly.\n\n(Ex. 25)")
+                valid = False
+            else:
+                self.rateLbl.config(foreground=self.app.color3)
 
         return valid
 
@@ -609,14 +706,18 @@ class AdminPage(Page):
             self.rate.pack_forget()
             self.amountLbl.config(text="Amount")
 
-    def exportCSV(self):
-        payroll.export_payroll()
-        print('EXPORTING as payroll.csv')
+    def exportDB(self):
         inactive = messagebox.askyesno('Exporting Active Employees', 'Would you like to export inactive employees as well?')
-        initialName = 'export_all' if inactive else 'export_active_only'
+        initialName = 'db_all' if inactive else 'db_active_only'
         filename = filedialog.asksaveasfilename(initialfile=initialName, filetypes=[("CSV File", ".csv")], defaultextension=".csv")
         if (filename):
             payroll.write_csv(filename, inactive)
+
+    def exportPay(self):
+        initialName = 'payroll'
+        filename = filedialog.asksaveasfilename(initialfile=initialName, filetypes=[("Text File", ".txt")], defaultextension=".txt")
+        if (filename):
+            payroll.export_payroll(filename)
 
 
     def setBindings(self, controller):
@@ -719,17 +820,17 @@ class EmployeePage(Page):
         self.searchEmpTab.initializeTable()
 
         self.entries = {
-            blankInfo: None,
-            self.fNameLbl: self.fName,
-            self.lNameLbl: self.lName,
-            self.streetLbl: self.street,
-            self.cityLbl: self.city,
-            self.stateLbl: self.state,
-            self.zipLbl: self.zip,
-            self.titleLbl: self.title,
-            blankPay: None,
-            self.payClassLbl: self.payClass,
-            self.amount1Lbl: self.amount1
+            None: blankInfo,
+            self.fName: self.fNameLbl,
+            self.lName: self.lNameLbl,
+            self.street: self.streetLbl,
+            self.city: self.cityLbl,
+            self.state: self.stateLbl,
+            self.zip: self.zipLbl,
+            self.title: self.titleLbl,
+            None: blankPay,
+            self.payClass: self.payClassLbl,
+            self.amount1: self.amount1Lbl
         }
 
         self.paymentInfo = [
@@ -834,15 +935,19 @@ class EmployeePage(Page):
         self.requiredFields = [self.fName, self.lName, self.street, self.city, self.state, self.zip]
         for field in self.requiredFields:
             if (len(field.get()) < 1):
+                self.entries[field].config(foreground='red')
                 messagebox.showerror("Invalid", "Please enter all required fields")
                 return False
+            else:
+                self.entries[field].config(foreground=self.app.color3)
+
         # Validate Zip Code
         if not re.fullmatch(ZIP_REGEX, self.zip.get()):
-            self.zip.config(foreground='red')
+            self.zipLbl.config(foreground='red')
             messagebox.showerror("Invalid Zip Code", "Make sure it is formatted correctly.\n\n(Ex. 84602)")
             return False
         else:
-            self.zip.config(foreground=self.app.color4)
+            self.zipLbl.config(foreground=self.app.color3)
         return True
 
     def setBindings(self, controller):
@@ -884,7 +989,7 @@ class searchFrame(ttk.Frame):
 
 
         table_frame = tk.Frame(self)
-        table_frame.pack(expand=1, fill=BOTH)
+        table_frame.pack(expand=1, fill="both")
 
         self.tree = ttk.Treeview(table_frame, style="t_style.Treeview")
         self.tree.bind("<Double-1>", self.showEmpData)
@@ -902,7 +1007,7 @@ class searchFrame(ttk.Frame):
         else:
             self.columnHeaders = ["First Name", "Last Name", "ID", "Active", "Title", "Department"]
             filterNames = ["First Name", "Last Name", "Title", "Department"]
-        self.clicked.set(str(self.columnHeaders[0]))
+        self.clicked.set(str(self.columnHeaders[1]))
         self.filterDrop['values'] = filterNames
 
         self.tree["column"] = self.columnHeaders
@@ -1048,8 +1153,8 @@ def setEntry(entry, text):
 def main():
     # Load employee payroll data from CSV
     payroll.load_employees()
-    payroll.process_timecards()
-    payroll.process_receipts()
+    # payroll.process_timecards()
+    # payroll.process_receipts()
 
     #open app
     app = PayrollApp()
