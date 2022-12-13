@@ -48,3 +48,13 @@ def test_editing_emp():
     emp.dob = '9/1/1997'
 
     assert emp.first_name == "Jane"
+    assert emp.last_name == "Doe"
+    assert emp.street == '123 Main St'
+    assert emp.city == 'Springfield'
+    assert emp.state == 'Illinois'
+    assert emp.zip == 62794
+    assert emp.classification == 2
+    assert emp.salary == 1000
+    assert emp.commission == 39
+    assert emp.hourly == 47.92
+    assert emp.dob == '9/1/1997'

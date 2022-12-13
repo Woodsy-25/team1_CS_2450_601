@@ -1057,10 +1057,23 @@ def main():
     with open('employees.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         #todo: make this a function - emp has no get_data() method
-        writer.writerow(['first_name', 'last_name', 'id', 'status', 'title', 'dept', 'office_email', 'office_phone', 'pay_rate', 'pay_type', 'pay_method', 'pay_account', 'pay_address'])
+        #skip the first line
+        writer.writerow(['id','first_name','last_name','address','city','state','zip','classification','salary','commission','hourly','dob','ssn','start_date','account','routing_num','permissions','title','dept','office_email','office_phone','active'])
         for emp in payroll.EMPLOYEES:
             #write each employee to the csv file
-            writer.writerow(emp.get_data())
+            #change their classification back to an int
+            #if the classification is set to salary, commission, or hourly, then set it to 0, 1, or 2 respectively
+            emp_data = []
+            for item in emp.get_data():
+                if item == 'Salary':
+                    emp_data.append(1)
+                elif item == 'Commission':
+                    emp_data.append(2)
+                elif item == 'Hourly':
+                    emp_data.append(3)
+                else:
+                    emp_data.append(item)
+            writer.writerow(emp_data)
 
 if __name__ == '__main__':
     main()

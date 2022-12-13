@@ -2,7 +2,7 @@ import os, os.path, csv, shutil, uuid
 
 EMPLOYEES = []
 PAY_LOGFILE = 'paylog.txt'
-EMPLOYEES_FILE = 'employees_with_info.csv'
+EMPLOYEES_FILE = 'employees.csv'
 
 #TODO add more info to receipt and timecard files
 
@@ -332,6 +332,9 @@ class Employee:
 
     def get_data(self):
         """Returns a list of all the employee's data."""
+        #change classification to string
+        if self.get_classification == 'Salary':
+            self.classification = 1
         return [self.emp_id, self.first_name, self.last_name, self.street, self.city, self.state, self.zip, str(self.classification), self.salary, self.commission, self.hourly, self.dob, self.ssn, self.start_date, self.account, self.routing_num, self.permissions, self.title, self.dept, self.office_email, self.office_phone, self.active]
 
 
