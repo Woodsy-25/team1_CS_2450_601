@@ -305,8 +305,6 @@ class Employee:
     def set_status(self, status):
         self.active = int(status) 
 
-
-
     def make_salaried(self, salary):
         """Changes employee classification to 'salaried' with the given salary."""
         self.classification = Salaried(salary)
@@ -331,6 +329,10 @@ class Employee:
     
     def get_payment(self):
         return self.classification.compute_pay()
+
+    def get_data(self):
+        """Returns a list of all the employee's data."""
+        return [self.emp_id, self.first_name, self.last_name, self.street, self.city, self.state, self.zip, str(self.classification), self.salary, self.commission, self.hourly, self.dob, self.ssn, self.start_date, self.account, self.routing_num, self.permissions, self.title, self.dept, self.office_email, self.office_phone, self.active]
 
 
 class Classification:
