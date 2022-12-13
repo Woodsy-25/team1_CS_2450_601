@@ -1056,10 +1056,11 @@ def main():
     #after app is closed, update the csv files with the EMPLOYEE list
     with open('employees.csv', 'w', newline='') as f:
         writer = csv.writer(f)
+        #todo: make this a function - emp has no get_data() method
         writer.writerow(['first_name', 'last_name', 'id', 'status', 'title', 'dept', 'office_email', 'office_phone', 'pay_rate', 'pay_type', 'pay_method', 'pay_account', 'pay_address'])
         for emp in payroll.EMPLOYEES:
+            #write each employee to the csv file
             writer.writerow(emp.get_data())
-
 
 if __name__ == '__main__':
     main()
