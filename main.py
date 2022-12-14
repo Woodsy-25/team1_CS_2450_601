@@ -219,7 +219,7 @@ class HelpPage(Page):
         adminHelp += "\n - Required fields have a asterisk (*) to the right of them."
         adminHelp += "\n - Once the employee is added, they will be visible under the Search Employees Tab."
         adminHelp += "\n\nSearch Employees Tab:\n - Admin can search for any employee, filtering by any of the fields in the dropdown to the right of the search bar."
-        adminHelp += "\n - To select an employee, double click on the specific employee in the list. This will pull up a new window with the\n   employee's infofmation."
+        adminHelp += "\n - To select an employee, double click on the specific employee in the list. This will pull up a new window with the\n   employee's information."
         adminHelp += "\n - From the employee info window, the admin has the option to Edit or Activate/Deactivate the employee."
         adminHelp += "\n - Clicking the \"Edit\" button will switch the \"Add Employee\" tab to \"Edit Employee\", where the employees information can\n   be updated."
         adminHelp += "\n - The \"Active Only\" toggle, located in the top right can be toggled to show or hide inactive employees."
@@ -227,7 +227,7 @@ class HelpPage(Page):
         adminHelp += "\n\n - EXPORTING EMPLOYEES: The Export DB button in the bottom left can be clicked to export a CSV of all employees or \n   just active employees."
         adminHelp += "\n\n - EXPORTING PAYROLL: The Export Payroll button in the bottom left can be clicked to generate and export a Text file \n   of all payroll information including the employee's name, address, and payment amount."
         adminHelp += "\n\n - When either of the export buttons are clicked, you will be presented with a save dialog where you can choose the \n   location and filename of the exported file."
-        adminHelp += "\n\nThe \"Logout\" button in the bottom right can be clicked at any time to log out of the applicatio."
+        adminHelp += "\n\nThe \"Logout\" button in the bottom right can be clicked at any time to log out of the application."
         
         ttk.Label(adminSection, text=adminHelp, font=SMALL_FONT).pack(**self.labelPack)
 
@@ -374,7 +374,7 @@ class AdminPage(Page):
         ToolTip(self.exportDbBtn, delay=1, msg='Export Employee Data as CSV')
 
         self.exportPayBtn = ttk.Button(self, text="Export Payroll", width=BTN_WIDTH, command=lambda: self.exportPay())
-        ToolTip(self.exportDbBtn, delay=1, msg='Export Payroll as Text File')
+        ToolTip(self.exportPayBtn, delay=1, msg='Export Payroll as Text File')
 
     def addColumns(self, parent):
         self.column1 = ttk.Frame(parent)
