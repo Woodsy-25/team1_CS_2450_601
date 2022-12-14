@@ -187,7 +187,7 @@ def export_payroll(filename):
 
 
 class Employee:
-    def __init__(self, emp_id = 'N/A', first_name = 'N/A', last_name = 'N/A', street = 'N/A', city = 'N/A', state = 'N/A', zip = 'N/A', classification = 'N/A', salary = 'N/A', commission = 'N/A', hourly = 'N/A', dob = 'N/A', ssn = 'N/A', start_date = 'N/A', account = 'N/A', routing_num = 'N/A', permissions = 'N/A', title = 'N/A', dept = 'N/A', office_email = 'N/A', office_phone = 'N/A', active = 'N/A'):
+    def __init__(self, emp_id = 'N/A', first_name = 'N/A', last_name = 'N/A', street = 'N/A', city = 'N/A', state = 'N/A', zip = 'N/A', classification = 'N/A', salary = 'N/A', commission = 'N/A', hourly = 'N/A', dob = 'N/A', ssn = 'N/A', start_date = 'N/A', account = 'N/A', routing_num = 'N/A', permissions = 'N/A', title = 'N/A', dept = 'N/A', office_email = 'N/A', office_phone = 'N/A', active = 1):
         self.emp_id = emp_id
         self.first_name = first_name
         self.last_name = last_name

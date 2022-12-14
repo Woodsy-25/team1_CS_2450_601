@@ -1,6 +1,6 @@
 id,first_name,last_name,address,city,state,zip,classification,salary,commission,hourly,dob,ssn,start_date,account,routing_num,permissions,title,dept,office_email,office_phone,active
 51-4678119,Issie,Scholard,11 Texas Court,Columbia,Missouri,65218,3,134386.51,34,91.06,9/7/1979,433-37-6370,3/24/2005,1635796688,596402474,1,Engineering Associate,HR,I.Scholard@gmail.com,123-556-6902,1
-68-9609244,Jed,Netti,85 Coolidge Terrace,San Antonio,Texas,78255,2,159648.55,47,45.7,8/6/1983,853-05-1049,2/25/2000,2475720010,655213753,1,Marketing Associate,Finance,J.Netti@gmail.com,626-570-9061,1
+68-9609244,Jed,Netti,85 Coolidge Terrace,San Antonio,Texas,78255,2,159648.55,47,45.7,8/6/1983,853-05-1049,2/25/2000,2475720010,655213753,2,Marketing Associate,Finance,J.Netti@gmail.com,626-570-9061,1
 47-2771794,Galvan,Solesbury,3 Drewry Junction,Springfield,Illinois,62794,2,91934.89,39,47.92,9/1/1997,710-77-6316,8/20/2001,231260459,707473871,1,Marketing Manager,Finance,G.Solesbury@gmail.com,780-523-0874,1
 11-0469486,Reynard,Lorenzin,3233 Spaight Point,Houston,Texas,77030,1,87578.56,27,86.84,2/26/1975,196-98-7977,8/20/2011,545766360,526479664,1,Finance Associate,Operations,R.Lorenzin@gmail.com,280-087-0720,1
 41-5906217,Sandi,Bernardinelli,24129 Susan Junction,Houston,Texas,77080,1,75273.14,44,58.58,3/27/1998,037-97-3120,9/26/2017,1.35407E+11,38429197,1,Marketing Associate,Marketing,S.Bernardinelli@gmail.com,674-255-8361,1
