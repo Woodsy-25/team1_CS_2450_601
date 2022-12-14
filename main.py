@@ -2,6 +2,10 @@
 This is the main program that curretly holds both the code from the employee project and also hold the code for the GUI.
 '''
 
+import subprocess
+import time
+subprocess.Popen('pip install -r requirements.txt', shell=True)
+time.sleep(5)
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk, messagebox, messagebox, filedialog
@@ -12,16 +16,14 @@ import tkinter as tk
 from tktooltip import ToolTip
 import sv_ttk
 import re
-import subprocess
 import bcrypt
+
 
 EMAIL_REGEX = "^[\w\.]+@([\w-]+\.)+[\w-]{2,4}$"
 PHONE_REGEX = "^\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}$"
 ZIP_REGEX = "^[0-9]{5}(?:-[0-9]{4})?$"
 DATE_REGEX = "^[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{4}$"
 NUMBER_REGEX = "^(?:-(?:[1-9](?:\\d{0,2}(?:,\\d{3})+|\\d*))|(?:0|(?:[1-9](?:\\d{0,2}(?:,\\d{3})+|\\d*))))(?:.\\d+|)$"
-
-subprocess.Popen('pip install -r requirements.txt', shell=True)
 
 #the payroll code
 LARGE_FONT = ('Verdana', 20) # specify font and size
